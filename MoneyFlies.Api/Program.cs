@@ -1,4 +1,4 @@
-using MoneyFlies.WebApi;
+using MoneyFlies.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,7 +28,7 @@ app.MapGet("/transactions", () => {
 .WithOpenApi();
 
 // TODO: criar teste integrado
-app.MapPost("/transactions", (DateOnly PaymentDate, string Category,  decimal Value, bool IsPaid, string? Description) => {
+app.MapPost("/transactions", (DateOnly PaymentDate, string Category, decimal Value, bool IsPaid, string? Description) => {
     var transaction = new Transaction(PaymentDate, Category, Value, IsPaid, Description);
     transactions.Add(transaction);
     return transaction.Id;

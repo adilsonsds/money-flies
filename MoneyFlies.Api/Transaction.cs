@@ -1,4 +1,4 @@
-namespace MoneyFlies.WebApi;
+﻿namespace MoneyFlies.Api;
 
 class Transaction
 {
