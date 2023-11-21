@@ -1,0 +1,33 @@
+@page "/transactions/add"
+
+<PageTitle>Add</PageTitle>
+
+<h1>Add</h1>
+
+<form method="post" @onsubmit="Submit">
+    @* <AntiforgeryToken /> *@
+    <InputText @bind-Value="Model.Category" />
+    <button type="submit">Submit</button>
+    <InputText @bind-Value="Model.Description" />
+    <button type="submit">Submit</button>
+</form>
+
+@code {
+    AddTransaction Model = new();
+
+    @* protected override void OnInitialized() => Model ??= new(); *@
+
+    private void Submit()
+    {
+        @* Logger.LogInformation("Id = {Id}", Model?.Id); *@
+    }
+
+    public class AddTransaction
+    {
+        public DateOnly PaymentDate { get; set; }
+        public string Category { get; set; }
+        public decimal Value { get; set; }
+        public bool IsPaid { get; set; }
+        public string? Description { get; set; }
+    }
+}
