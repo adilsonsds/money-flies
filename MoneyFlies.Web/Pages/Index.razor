@@ -1,4 +1,5 @@
 ﻿@page "/"
+@* @inject Blazored.LocalStorage.ILocalStorageService localStorage *@
 
 <PageTitle>Index</PageTitle>
 
@@ -6,4 +7,73 @@
 
 Welcome to MoneyFlies app.
 
+@if (transactions == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Payment Date</th>
+                <th>Category</th>
+                <th>Value</th>
+                <th>Is paid?</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var transaction in transactions)
+            {
+                <tr>
+                    <td>@transaction.PaymentDate.ToShortDateString()</td>
+                    <td>@transaction.Category</td>
+                    <td>@transaction.Value</td>
+                    <td>@transaction.IsPaid</td>
+                    <td>@transaction.Description</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
 <SurveyPrompt Title="How is Blazor working for you?" />
+
+@code {
+    private Transaction[]? transactions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        transactions = new Transaction[]
+        {
+            new Transaction
+            {
+                PaymentDate = new DateOnly(2023, 01, 10),
+                Category = "Mercado",
+                Value = 10m,
+                Description = "Teste",
+                IsPaid = true
+            },
+            new Transaction
+            {
+                PaymentDate = new DateOnly(2023, 02, 07),
+                Category = "Shopping",
+                Value = 15m,
+                Description = "Teste",
+                IsPaid = true
+            }
+        };
+        @* await localStorage.SetItemAsync("transactions", "John Smith");
+        transactions = await localStorage.GetItemAsync<Transaction[]>("transactions"); *@
+    }
+
+    public class Transaction
+    {
+        public DateOnly PaymentDate { get; set; }
+        public string Category { get; set; }
+        public decimal Value { get; set; }
+        public bool IsPaid { get; set; }
+        public string? Description { get; set; }
+    }
+}
