@@ -1,4 +1,7 @@
 @page "/transactions/add"
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@using System.Text.Json
+@using MoneyFlies.Web.Models
 
 <PageTitle>Add</PageTitle>
 
@@ -6,28 +9,46 @@
 
 <form method="post" @onsubmit="Submit">
     @* <AntiforgeryToken /> *@
-    <InputText @bind-Value="Model.Category" />
-    <button type="submit">Submit</button>
-    <InputText @bind-Value="Model.Description" />
+
+    <div>
+        <label>Type</label>
+        <InputSelect @bind-Value="Model.Type">
+            <option value="@TransactionType.CashInflow">@TransactionType.CashInflow.ToString()</option>
+            <option value="@TransactionType.CashOutflow">@TransactionType.CashOutflow.ToString()</option>
+        </InputSelect>
+    </div>
+
+    <div>
+        <label>Payment date</label>
+        <InputDate @bind-Value="Model.PaymentDate" />
+    </div>
+
+    <div>
+        <label>Value</label>
+        <InputNumber @bind-Value="Model.Value" @bind-Value:format="N2" />
+    </div>
+
+    <div>
+        <label>Is paid</label>
+        <InputCheckbox @bind-Value="Model.IsPaid" />
+    </div>
+
+    <div>
+        <label>Description</label>
+        <InputText @bind-Value="Model.Description" />
+    </div>
+
     <button type="submit">Submit</button>
 </form>
 
 @code {
-    AddTransaction Model = new();
+    Transaction Model = new();
 
     @* protected override void OnInitialized() => Model ??= new(); *@
 
-    private void Submit()
+    private async Task Submit()
     {
-        @* Logger.LogInformation("Id = {Id}", Model?.Id); *@
-    }
-
-    public class AddTransaction
-    {
-        public DateOnly PaymentDate { get; set; }
-        public string Category { get; set; }
-        public decimal Value { get; set; }
-        public bool IsPaid { get; set; }
-        public string? Description { get; set; }
+        string jsonString = JsonSerializer.Serialize(Model);
+        await localStorage.SetItemAsync("transactions", jsonString);
     }
 }
