@@ -23,7 +23,7 @@ else
             <th>Payment Date</th>
             <th>Tags</th>
             <th>Value</th>
-            <th>Is paid?</th>
+            <th>Was paid?</th>
             <th>Description</th>
         </tr>
     </thead>
@@ -35,7 +35,7 @@ else
                     <td>@transaction.PaymentDate.ToShortDateString()</td>
                     <td>@transaction.GetTagsDescriptions()</td>
                     <td>@transaction.Value</td>
-                    <td>@transaction.IsPaid</td>
+                    <td>@transaction.WasPaid</td>
                     <td>@transaction.Description</td>
                 </tr>
             }
