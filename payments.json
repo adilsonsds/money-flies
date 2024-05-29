@@ -1,0 +1,42 @@
+[
+    {
+        "id": "1",
+        "date": "2019-01-01",
+        "amount": 45.9,
+        "type": "CASH",
+        "status": "PAID",
+        "description": "netflix"
+    },
+    {
+        "id": "2",
+        "date": "2019-01-02",
+        "amount": 45.9,
+        "type": "CASH",
+        "status": "PAID",
+        "description": "netflix"
+    },
+    {
+        "id": "3",
+        "date": "2019-01-03",
+        "amount": 45.9,
+        "type": "CASH",
+        "status": "PAID",
+        "description": "netflix"
+    },
+    {
+        "id": "4",
+        "date": "2019-01-04",
+        "amount": 45.9,
+        "type": "CASH",
+        "status": "PAID",
+        "description": "netflix"
+    },
+    {
+        "id": "5",
+        "date": "2019-01-05",
+        "amount": 45.9,
+        "type": "CASH",
+        "status": "PAID",
+        "description": "netflix"
+    }
+]
