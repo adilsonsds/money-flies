@@ -5,7 +5,9 @@
         "amount": 45.9,
         "type": "CASH",
         "status": "PAID",
-        "description": "netflix"
+        "description": "netflix",
+        "category": "entertainment",
+        "account": "credit card"
     },
     {
         "id": "2",
@@ -13,7 +15,9 @@
         "amount": 45.9,
         "type": "CASH",
         "status": "PAID",
-        "description": "netflix"
+        "description": "netflix",
+        "category": "entertainment",
+        "account": "credit card"
     },
     {
         "id": "3",
@@ -21,7 +25,9 @@
         "amount": 45.9,
         "type": "CASH",
         "status": "PAID",
-        "description": "netflix"
+        "description": "netflix",
+        "category": "entertainment",
+        "account": "credit card"
     },
     {
         "id": "4",
@@ -29,7 +35,9 @@
         "amount": 45.9,
         "type": "CASH",
         "status": "PAID",
-        "description": "netflix"
+        "description": "netflix",
+        "category": "entertainment",
+        "account": "credit card"
     },
     {
         "id": "5",
@@ -37,6 +45,8 @@
         "amount": 45.9,
         "type": "CASH",
         "status": "PAID",
-        "description": "netflix"
+        "description": "netflix",
+        "category": "entertainment",
+        "account": "credit card"
     }
 ]
