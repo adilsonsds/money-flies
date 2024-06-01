@@ -1,10 +1,10 @@
 import { Payment } from "~/types/Payment";
 
-type PaymentTableType = {
+type PaymentsListType = {
   payments: Payment[];
 };
 
-export default function PaymentsTable({ payments }: PaymentTableType) {
+export default function PaymentsList({ payments }: PaymentsListType) {
   return (
     <table className="mt-2">
       <thead>
