@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import { Payment } from "~/types/Payment";
+import type { Payment } from "~/types/Payment";
 
 export async function getPayments() : Promise<Payment[]> {
     const rawFileContent = await fs.readFile("payments.json", "utf-8");
@@ -12,4 +12,9 @@ export async function addPayment(payment: Payment) : Promise<void> {
     payment.id = new Date().toISOString();
     payments.push(payment);
     await fs.writeFile("payments.json", JSON.stringify(payments, null, 2));
+}
+
+export async function findPaymentById(paymentId: string) : Promise<Payment | undefined> {
+    const payments = await getPayments();
+    return payments.find(payment => payment.id === paymentId);
 }

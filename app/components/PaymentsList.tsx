@@ -1,4 +1,5 @@
-import { Payment } from "~/types/Payment";
+import { Link } from "@remix-run/react";
+import type { Payment } from "~/types/Payment";
 
 type PaymentsListType = {
   payments: Payment[];
@@ -9,9 +10,13 @@ export default function PaymentsList({ payments }: PaymentsListType) {
     <table className="mt-2">
       <thead>
         <tr>
-          <th>Payment Date</th>
-          <th>Title</th>
-          <th>Tags</th>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Category</th>
+          <th>Method</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -20,9 +25,15 @@ export default function PaymentsList({ payments }: PaymentsListType) {
             <td>{payment.date}</td>
             <td>{payment.description}</td>
             <td>{payment.amount}</td>
+            <td>{payment.status}</td>
+            <td>{payment.category}</td>
+            <td>{payment.method}</td>
+            <td>
+              <Link to={`/payments/${payment.id}`} className="text-blue-500">View</Link>
+            </td>
           </tr>
         ))}
-      </tbody>
+      </tbody>      
     </table>
   )
 };
