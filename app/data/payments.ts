@@ -9,6 +9,7 @@ export async function getPayments() : Promise<Payment[]> {
 
 export async function addPayment(payment: Payment) : Promise<void> {
     const payments = await getPayments();
+    payment.id = new Date().toISOString();
     payments.push(payment);
     await fs.writeFile("payments.json", JSON.stringify(payments, null, 2));
 }

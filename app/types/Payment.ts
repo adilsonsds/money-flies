@@ -1,9 +1,9 @@
 export type Payment = {
-    id: number;
+    id: string;
     date: string;
     amount: number;
-    type: string;
-    description: string;
     status: string;
-    tags: Array<string>;
+    description: string;
+    category: string;
+    method: string;
 };
