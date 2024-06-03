@@ -38,7 +38,6 @@ export async function getSummaries(): Promise<string[][]> {
         for (let j = 0; j < monthsOfYear.length; j++) {
             let totalAmount = 0;
 
-            console.log(typeof payments[i].date)
             var paymentsOfCategoryAndMonth = payments.filter(payment => payment.category === categories[i] && new Date(payment.date).getMonth() + 1 === monthsOfYear[j]);
 
             for (let k = 0; k < paymentsOfCategoryAndMonth.length; k++) {
