@@ -1,8 +1,8 @@
 import { Link } from "@remix-run/react";
-import type { Payment } from "~/types/Payment";
+import type { PaymentsList } from "~/types/Payment";
 
 type PaymentsListType = {
-  payments: Payment[];
+  payments: PaymentsList;
 };
 
 export default function PaymentsList({ payments }: PaymentsListType) {

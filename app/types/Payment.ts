@@ -7,3 +7,5 @@ export type Payment = {
     category: string;
     method: string;
 };
+
+export type PaymentsList = Payment[];

@@ -1,47 +1,92 @@
 [
-    {
-        "id": "1",
-        "date": "2019-01-01",
-        "amount": 45.9,
-        "status": "PAID",
-        "description": "netflix",
-        "category": "entertainment",
-        "method": "credit card"
-    },
-    {
-        "id": "2",
-        "date": "2019-01-02",
-        "amount": 45.9,
-        "status": "PAID",
-        "description": "netflix",
-        "category": "entertainment",
-        "method": "credit card"
-    },
-    {
-        "id": "3",
-        "date": "2019-01-03",
-        "amount": 45.9,
-        "status": "PAID",
-        "description": "netflix",
-        "category": "entertainment",
-        "method": "credit card"
-    },
-    {
-        "id": "4",
-        "date": "2019-01-04",
-        "amount": 45.9,
-        "status": "PAID",
-        "description": "netflix",
-        "category": "entertainment",
-        "method": "credit card"
-    },
-    {
-        "id": "5",
-        "date": "2019-01-05",
-        "amount": 45.9,
-        "status": "PAID",
-        "description": "netflix",
-        "category": "entertainment",
-        "method": "credit card"
-    }
+  {
+    "id": "1",
+    "date": "2019-01-01",
+    "amount": 45.9,
+    "status": "PAID",
+    "description": "netflix",
+    "category": "entertainment",
+    "method": "credit card"
+},
+{
+    "id": "2",
+    "date": "2019-12-02",
+    "amount": 45.9,
+    "status": "PAID",
+    "description": "netflix",
+    "category": "entertainment",
+    "method": "credit card"
+},
+{
+    "id": "3",
+    "date": "2019-10-03",
+    "amount": 45.9,
+    "status": "PAID",
+    "description": "netflix",
+    "category": "entertainment",
+    "method": "credit card"
+},
+{
+    "id": "4",
+    "date": "2019-04-04",
+    "amount": 45.9,
+    "status": "PAID",
+    "description": "netflix",
+    "category": "entertainment",
+    "method": "credit card"
+},
+{
+    "id": "5",
+    "date": "2019-10-05",
+    "amount": 45.9,
+    "status": "PAID",
+    "description": "netflix",
+    "category": "entertainment",
+    "method": "credit card"
+  },
+  {
+    "date": "2019-08-05",
+    "amount": "6",
+    "status": "pending",
+    "description": "Internet",
+    "category": "entertainment",
+    "method": "cash",
+    "id": "2024-06-01T19:15:29.685Z"
+  },
+  {
+    "date": "2019-11-05",
+    "amount": "13",
+    "status": "paid",
+    "description": "gas",
+    "category": "food",
+    "method": "cash",
+    "id": "2024-06-01T19:27:51.113Z"
+  },
+  {
+    "date": "2019-07-05",
+    "amount": "1212",
+    "status": "paid",
+    "description": "adfaef",
+    "category": "food",
+    "method": "creditCard",
+    "id": "2024-06-01T19:37:39.031Z"
+  },
+  {
+    "date": "2019-04-05",
+    "amount": "40",
+    "status": "paid",
+    "description": "amazon prime",
+    "category": "housing",
+    "method": "creditCard",
+    "id": "2024-06-01T19:59:56.137Z"
+  },
+  {
+    "date": "2019-03-05",
+    "amount": "-3",
+    "status": "pending",
+    "description": "teste",
+    "category": "transport",
+    "method": "cash",
+    "id": "2024-06-01T23:30:27.416Z"
+  }
 ]

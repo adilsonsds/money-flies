@@ -12,14 +12,15 @@ import {
 import type { LinksFunction } from "@remix-run/node";
 import stylesheet from "~/tailwind.css?url";
 import PaymentsList from "./components/PaymentsList";
-import { getPayments } from "./data/payments";
+import { getPayments, getSummaries } from "./data/payments";
+import SummaryList from "./components/SummaryList";
 
 export const links: LinksFunction = () => {
   return [{ rel: "stylesheet", href: stylesheet }];
 }
 
 export default function App() {
-  const { payments } = useLoaderData<typeof loader>();
+  const { payments, summaries } = useLoaderData<typeof loader>();
 
   return (
     <html lang="en">
@@ -35,6 +36,9 @@ export default function App() {
             <Link to="/payments/new" className="block bg-blue-500 text-white p-4">
               Add Payment
             </Link>
+            <h1 className="text-3xl font-bold underline">Summary</h1>
+            <SummaryList sumaries={summaries} />
+            <h1 className="text-3xl font-bold underline">Payments</h1>
             <PaymentsList payments={payments} />
           </div>
           <div className="w-1/4 bg-gray-100 text-black">
@@ -50,5 +54,6 @@ export default function App() {
 
 export const loader = async () => {
   const payments = await getPayments();
-  return json({ payments });
+  const summaries = await getSummaries();
+  return json({ payments, summaries });
 };
