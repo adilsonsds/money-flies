@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import type { Payment, PaymentsList } from "~/types/Payment";
-import type { SummaryTable } from "~/types/Summary";
+import type { SummaryList } from "~/types/Summary";
 
 export async function getPayments(): Promise<PaymentsList> {
     const rawFileContent = await fs.readFile("payments.json", "utf-8");
@@ -20,36 +20,29 @@ export async function findPaymentById(paymentId: string): Promise<Payment | unde
     return payments.find(payment => payment.id === paymentId);
 }
 
-export async function getSummaries(): Promise<SummaryTable> {
+export async function getSummaries(): Promise<SummaryList> {
     const payments = await getPayments();
+    const categories = [...new Set(payments.map(payment => payment.category))];
+    const summaries: SummaryList = [];
 
-    let result: SummaryTable = [];
+    const months = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
-    let categories = [...new Set(payments.map(payment => payment.category))];
-    var monthsOfYear = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    for (var i = 0; i < categories.length; i++) {
 
-    result.push(['#', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
+        for (var j = 0; j < months.length; j++) {
 
-    for (let i = 0; i < categories.length; i++) {
+            let startOfMonth = new Date(new Date().getFullYear(), months[j], 1);
+            let endOfMonth = new Date(new Date().getFullYear(), months[j] + 1, 0);
 
-        let totals: string[] = [];
+            let paymentsOfCategoryAndMonth = payments.filter(payment => payment.category === categories[i] && new Date(payment.date) >= startOfMonth && new Date(payment.date) <= endOfMonth);
 
-        totals.push(categories[i]);
+            if (paymentsOfCategoryAndMonth.length === 0) continue;
 
-        for (let j = 0; j < monthsOfYear.length; j++) {
-            let totalAmount = 0;
+            let totalAmount = paymentsOfCategoryAndMonth.reduce((acc, payment) => acc + payment.amount, 0);
 
-            var paymentsOfCategoryAndMonth = payments.filter(payment => payment.category === categories[i] && new Date(payment.date).getMonth() + 1 === monthsOfYear[j]);
-
-            for (let k = 0; k < paymentsOfCategoryAndMonth.length; k++) {
-                totalAmount += paymentsOfCategoryAndMonth[k].amount;
-            }
-
-            totals.push(totalAmount.toString());
+            summaries.push({ category: categories[i], startDate: startOfMonth, endDate: endOfMonth, amount: totalAmount });
         }
-
-        result.push(totals);
     }
 
-    return result;
+    return summaries;
 }
