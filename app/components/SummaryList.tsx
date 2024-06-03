@@ -1,5 +1,7 @@
+import type { SummaryTable } from "~/types/Summary";
+
 type SummaryListType = {
-    sumaries: string[][];
+    sumaries: SummaryTable;
 };
 
 export default function SummaryList({ sumaries }: SummaryListType) {

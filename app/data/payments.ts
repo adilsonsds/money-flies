@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import type { Payment, PaymentsList } from "~/types/Payment";
+import type { SummaryTable } from "~/types/Summary";
 
 export async function getPayments(): Promise<PaymentsList> {
     const rawFileContent = await fs.readFile("payments.json", "utf-8");
@@ -19,10 +20,10 @@ export async function findPaymentById(paymentId: string): Promise<Payment | unde
     return payments.find(payment => payment.id === paymentId);
 }
 
-export async function getSummaries(): Promise<string[][]> {
+export async function getSummaries(): Promise<SummaryTable> {
     const payments = await getPayments();
 
-    let result: string[][] = [];
+    let result: SummaryTable = [];
 
     let categories = [...new Set(payments.map(payment => payment.category))];
     var monthsOfYear = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
