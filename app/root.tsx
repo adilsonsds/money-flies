@@ -36,9 +36,6 @@ export default function App() {
       <body className="bg-gray-200">
         <div className="flex">
           <div className="w-3/4">
-            <Link to="/payments/new" className="block bg-blue-500 text-white p-4">
-              Add Payment
-            </Link>
             <h1 className="text-3xl font-bold underline">Summary</h1>
             <table className="mt-2">
               <thead>

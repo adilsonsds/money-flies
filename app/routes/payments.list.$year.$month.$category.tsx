@@ -1,4 +1,4 @@
-import { Link, json, useLoaderData } from "@remix-run/react";
+import { Link, json, useLoaderData, useNavigate } from "@remix-run/react";
 import { getPayments } from "~/data/payments";
 
 export default function PaymentsList() {
@@ -35,13 +35,25 @@ export default function PaymentsList() {
                     ))}
                 </tbody>
             </table>
+
+            <Link type="submit" 
+                className="mt-4 px-4 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                to="/payments/new">
+                Add payment
+            </Link>
+
+            <Link type="submit"
+                className="mt-4 px-4 py-2 rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                to="/">
+                Close
+            </Link>
         </div>
     )
 }
 
 export const loader = async ({ params }: any) => {
     const year = parseInt(params.year, 10);
-    const month = parseInt(params.month, 10);    
+    const month = parseInt(params.month, 10);
     const payments = await getPayments();
 
     const filteredPayments = payments.filter(payment => {
