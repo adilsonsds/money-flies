@@ -1,3 +1,4 @@
+import { LoaderFunctionArgs } from "@remix-run/node";
 import { redirect, useNavigate } from "@remix-run/react";
 import PaymentForm from "~/components/PaymentForm";
 import { addPayment } from "~/data/payments";
@@ -20,16 +21,26 @@ export default function PaymentPage() {
     );
 }
 
-export async function action({ request }: any) {
+export async function action({ request }: LoaderFunctionArgs) {
     const formData = await request.formData();
-    const paymentData = Object.fromEntries(formData) as Payment;
+    const rawData = Object.fromEntries(formData.entries());
 
-    if (!paymentData.date || !paymentData.description || !paymentData.amount) {
+    const payment: Payment = {
+        id: new Date().toISOString(),
+        date: rawData.date as string,
+        description: rawData.description as string,
+        amount: parseFloat(rawData.amount as string),
+        status: rawData.status as string,
+        category: rawData.category as string,
+        method: rawData.method as string,
+    };
+
+    if (!payment.date || !payment.description || !payment.amount) {
         return {
             message: "Please fill in all fields"
         }
     }
 
-    await addPayment(paymentData);
-    return redirect("/");
+    await addPayment(payment);
+    return redirect(`/payments/list?year=${new Date(payment.date).getFullYear()}&month=${new Date(payment.date).getMonth() + 1}&category=${payment.category}`);
 }

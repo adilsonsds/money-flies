@@ -93,9 +93,27 @@
     "date": "2024-06-02",
     "amount": "10",
     "status": "paid",
-    "description": "academia",
+    "description": "Gym",
     "category": "health",
     "method": "cash",
     "id": "2024-06-03T01:56:08.343Z"
+  },
+  {
+    "date": "2024-04-02",
+    "amount": "76",
+    "status": "paid",
+    "description": "Gym",
+    "category": "health",
+    "method": "cash",
+    "id": "2024-06-08T19:32:06.475Z"
+  },
+  {
+    "id": "2024-06-08T19:41:31.845Z",
+    "date": "2024-07-24",
+    "description": "uber",
+    "amount": 37,
+    "status": "paid",
+    "category": "transport",
+    "method": "cash"
   }
 ]

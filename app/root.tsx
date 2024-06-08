@@ -11,19 +11,31 @@ import {
 
 import type { LinksFunction } from "@remix-run/node";
 import stylesheet from "~/tailwind.css?url";
-import { getSummaries } from "./data/payments";
+import { getFilterURL, getPayments, getTotalValue } from "./data/payments";
 
 export const links: LinksFunction = () => {
   return [{ rel: "stylesheet", href: stylesheet }];
 }
 
+type Period = {
+  startDate: Date;
+  endDate: Date;
+}
+
 export default function App() {
-  const { summaries } = useLoaderData<typeof loader>();
+  const { payments } = useLoaderData<typeof loader>();
 
   const year = new Date().getFullYear();
   const header = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const months = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-  const categories = [...new Set(summaries.map(summary => summary.category))];
+
+  const periods: Period[] = months.map(month => {
+    const startDate = new Date(year, month, 1);
+    const endDate = new Date(year, month + 1, 0);
+    return { startDate, endDate };
+  });
+
+  const categories = [...new Set(payments.map(summary => summary.category))];
 
   return (
     <html lang="en">
@@ -52,12 +64,12 @@ export default function App() {
                 {categories.map((category, index) => (
                   <tr key={index}>
                     <td className="border px-4 py-2">{category}</td>
-                    {months.map((month, index) => {
-                      const summary = summaries.find(summary => summary.category === category && new Date(summary.startDate).getMonth() === month);
+                    {periods.map((period, index) => {
+                      const totalValue = getTotalValue(payments, { startDate: period.startDate, endDate: period.endDate, category: category });
                       return (
                         <td key={index} className="border px-4 py-2">
-                          <Link to={`/payments/list/${year}/${month+1}/${category}`} className="text-blue-500">
-                            {summary ? summary.amount : 0}
+                          <Link to={`/payments/list?${getFilterURL({ startDate: period.startDate, endDate: period.endDate, category })}`} className="text-blue-500">
+                            {totalValue}
                           </Link>
                         </td>
                       );
@@ -79,6 +91,6 @@ export default function App() {
 }
 
 export const loader = async () => {
-  const summaries = await getSummaries();
-  return json({ summaries });
+  const payments = await getPayments();
+  return json({ payments });
 };
