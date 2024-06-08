@@ -11,16 +11,19 @@ import {
 
 import type { LinksFunction } from "@remix-run/node";
 import stylesheet from "~/tailwind.css?url";
-import PaymentsList from "./components/PaymentsList";
-import { getPayments, getSummaries } from "./data/payments";
-import SummaryList from "./components/SummaryList";
+import { getSummaries } from "./data/payments";
 
 export const links: LinksFunction = () => {
   return [{ rel: "stylesheet", href: stylesheet }];
 }
 
 export default function App() {
-  const { payments, summaries } = useLoaderData<typeof loader>();
+  const { summaries } = useLoaderData<typeof loader>();
+
+  const year = new Date().getFullYear();
+  const header = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const months = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+  const categories = [...new Set(summaries.map(summary => summary.category))];
 
   return (
     <html lang="en">
@@ -37,9 +40,35 @@ export default function App() {
               Add Payment
             </Link>
             <h1 className="text-3xl font-bold underline">Summary</h1>
-            <SummaryList sumaries={summaries} />
-            <h1 className="text-3xl font-bold underline">Payments</h1>
-            <PaymentsList payments={payments} />
+            <table className="mt-2">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  {months.map((col, index) => (
+                    <th key={index} className="border px-4 py-2">
+                      {header[col]}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {categories.map((category, index) => (
+                  <tr key={index}>
+                    <td className="border px-4 py-2">{category}</td>
+                    {months.map((month, index) => {
+                      const summary = summaries.find(summary => summary.category === category && new Date(summary.startDate).getMonth() === month);
+                      return (
+                        <td key={index} className="border px-4 py-2">
+                          <Link to={`/payments/list/${year}/${month+1}/${category}`} className="text-blue-500">
+                            {summary ? summary.amount : 0}
+                          </Link>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
           <div className="w-1/4 bg-gray-100 text-black">
             <Outlet />
@@ -53,7 +82,6 @@ export default function App() {
 }
 
 export const loader = async () => {
-  const payments = await getPayments();
   const summaries = await getSummaries();
-  return json({ payments, summaries });
+  return json({ summaries });
 };

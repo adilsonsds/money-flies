@@ -32,7 +32,7 @@ export default function PaymentDetailsPage() {
             }
 
             <div className="mt-4">
-                <Link to="/" className="text-blue-500">Back to Payments</Link>
+                <Link to="/payments/list" className="text-blue-500">Back to Payments</Link>
             </div>
         </div>
     )
