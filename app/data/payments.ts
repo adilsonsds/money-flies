@@ -3,7 +3,7 @@ import type { Payment, PaymentsFilter, PaymentsList } from "~/types/Payment";
 
 export async function getPayments(): Promise<PaymentsList> {
     const rawFileContent = await fs.readFile("payments.json", "utf-8");
-    const payments: Array<Payment> = JSON.parse(rawFileContent ?? []);
+    const payments: PaymentsList = JSON.parse(rawFileContent ?? []);
     return payments;
 }
 
@@ -41,4 +41,10 @@ export function getFilterUrlFromPayment(payment: Payment): string {
     const firstDayOfMonth = new Date(paymentDate.getFullYear(), paymentDate.getMonth(), 1);
     const lastDayOfMonth = new Date(paymentDate.getFullYear(), paymentDate.getMonth() + 1, 0);
     return `startDate=${firstDayOfMonth.toISOString().split('T')[0]}&endDate=${lastDayOfMonth.toISOString().split('T')[0]}&category=${payment.category}`;
+}
+
+export async function deletePaymentById(paymentId: string): Promise<void> {
+    const payments = await getPayments();
+    const updatedPayments = payments.filter(payment => payment.id !== paymentId);
+    await fs.writeFile("payments.json", JSON.stringify(updatedPayments, null, 2));
 }
