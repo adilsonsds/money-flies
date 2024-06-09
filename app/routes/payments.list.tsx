@@ -8,8 +8,8 @@ export default function PaymentsList() {
 
     return (
         <div>
-            <h1 className="text-3xl font-bold underline">Payments</h1>
-            <table className="mt-2">
+            <h1 className="text-3xl font-bold">Payments</h1>
+            <table className="w-full">
                 <thead>
                     <tr>
                         <th>Date</th>
@@ -24,13 +24,13 @@ export default function PaymentsList() {
                 <tbody>
                     {payments.map(payment => (
                         <tr key={payment.id}>
-                            <td>{payment.date}</td>
-                            <td>{payment.description}</td>
-                            <td>{payment.amount}</td>
-                            <td>{payment.status}</td>
-                            <td>{payment.category}</td>
-                            <td>{payment.method}</td>
-                            <td>
+                            <td className="text-center">{payment.date}</td>
+                            <td className="text-center">{payment.description}</td>
+                            <td className="text-center">{payment.amount}</td>
+                            <td className="text-center">{payment.status}</td>
+                            <td className="text-center">{payment.category}</td>
+                            <td className="text-center">{payment.method}</td>
+                            <td className="text-center">
                                 <Link to={`/payments/${payment.id}`} className="text-blue-500">View</Link>
                             </td>
                         </tr>
@@ -38,17 +38,19 @@ export default function PaymentsList() {
                 </tbody>
             </table>
 
-            <Link type="submit"
-                className="mt-4 px-4 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                to={`/payments/new?${getFilterURL({ startDate: new Date(filter.startDate), endDate: new Date(filter.endDate), category: filter.category })}`}>
-                Add payment
-            </Link>
+            <div className="py-4">
+                <Link type="submit"
+                    className="px-4 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    to={`/payments/new?${getFilterURL({ startDate: new Date(filter.startDate), endDate: new Date(filter.endDate), category: filter.category })}`}>
+                    Add payment
+                </Link>
 
-            <Link type="submit"
-                className="mt-4 px-4 py-2 rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                to="/">
-                Close
-            </Link>
+                <Link type="submit"
+                    className="px-4 py-2 rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ml-2"
+                    to="/">
+                    Close
+                </Link>
+            </div>
         </div>
     )
 }
