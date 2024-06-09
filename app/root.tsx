@@ -77,6 +77,21 @@ export default function App() {
                   </tr>
                 ))}
               </tbody>
+              <tbody>
+                <tr>
+                  <td className="border px-4 py-2">Total</td>
+                  {periods.map((period, index) => {
+                    const totalValue = getTotalValue(payments, { startDate: period.startDate, endDate: period.endDate });
+                    return (
+                      <td key={index} className="border px-4 py-2">
+                        <Link to={`/payments/list?${getFilterURL({ startDate: period.startDate, endDate: period.endDate })}`} className="text-blue-500">
+                          {totalValue}
+                        </Link>
+                      </td>
+                    );
+                  })}
+                </tr>
+              </tbody>
             </table>
           </div>
           <div className="w-1/4 bg-gray-100 text-black">

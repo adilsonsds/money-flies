@@ -11,7 +11,7 @@ export function getFilteredPayments(payments: PaymentsList, filter: PaymentsFilt
     return payments.filter(payment =>
         new Date(payment.date) >= new Date(filter.startDate) &&
         new Date(payment.date) <= new Date(filter.endDate) &&
-        payment.category === filter.category
+        (!filter.category || payment.category === filter.category)
     );
 }
 
@@ -31,5 +31,7 @@ export async function addPayment(payment: Payment): Promise<void> {
 }
 
 export function getFilterURL({ startDate, endDate, category }: PaymentsFilter): string {
-    return `startDate=${startDate.toISOString().split('T')[0]}&endDate=${endDate.toISOString().split('T')[0]}&category=${category}`;
+    return category && category.length > 0
+        ? `startDate=${startDate.toISOString().split('T')[0]}&endDate=${endDate.toISOString().split('T')[0]}&category=${category}`
+        : `startDate=${startDate.toISOString().split('T')[0]}&endDate=${endDate.toISOString().split('T')[0]}`;
 }
