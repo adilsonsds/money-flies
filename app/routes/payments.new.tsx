@@ -1,6 +1,6 @@
 import { LoaderFunctionArgs } from "@remix-run/node";
 import { Form, redirect, useActionData, useNavigate, useNavigation } from "@remix-run/react";
-import { addPayment } from "~/data/payments";
+import { addPayment, getFilterUrlFromPayment } from "~/data/payments";
 import type { Payment } from "~/types/Payment";
 
 export default function PaymentPage() {
@@ -88,5 +88,5 @@ export async function action({ request }: LoaderFunctionArgs) {
     }
 
     await addPayment(payment);
-    return redirect(`/payments/list?year=${new Date(payment.date).getFullYear()}&month=${new Date(payment.date).getMonth() + 1}&category=${payment.category}`);
+    return redirect(`/payments/list?${getFilterUrlFromPayment(payment)}`);
 }

@@ -35,3 +35,10 @@ export function getFilterURL({ startDate, endDate, category }: PaymentsFilter): 
         ? `startDate=${startDate.toISOString().split('T')[0]}&endDate=${endDate.toISOString().split('T')[0]}&category=${category}`
         : `startDate=${startDate.toISOString().split('T')[0]}&endDate=${endDate.toISOString().split('T')[0]}`;
 }
+
+export function getFilterUrlFromPayment(payment: Payment): string {
+    const paymentDate = new Date(payment.date);
+    const firstDayOfMonth = new Date(paymentDate.getFullYear(), paymentDate.getMonth(), 1);
+    const lastDayOfMonth = new Date(paymentDate.getFullYear(), paymentDate.getMonth() + 1, 0);
+    return `startDate=${firstDayOfMonth.toISOString().split('T')[0]}&endDate=${lastDayOfMonth.toISOString().split('T')[0]}&category=${payment.category}`;
+}
