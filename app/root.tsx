@@ -3,17 +3,11 @@ import {
   Meta,
   Outlet,
   Scripts,
-  ScrollRestoration
+  ScrollRestoration,
 } from "@remix-run/react";
+import "./tailwind.css";
 
-import type { LinksFunction } from "@remix-run/node";
-import stylesheet from "~/tailwind.css?url";
-
-export const links: LinksFunction = () => {
-  return [{ rel: "stylesheet", href: stylesheet }];
-}
-
-export default function App() {
+export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -22,13 +16,19 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body className="bg-gray-200">
-        <div className="container mx-auto p-4">
-          <Outlet />
-        </div>
+      <body>
+        {children}
         <ScrollRestoration />
         <Scripts />
       </body>
     </html>
   );
+}
+
+export default function App() {
+  return <Outlet />;
+}
+
+export function HydrateFallback() {
+  return <p>Loading...</p>;
 }
