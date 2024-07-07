@@ -17,7 +17,6 @@ export default function PaymentsList() {
                         <th>Amount</th>
                         <th>Status</th>
                         <th>Category</th>
-                        <th>Method</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -29,7 +28,6 @@ export default function PaymentsList() {
                             <td className="text-center">{payment.amount}</td>
                             <td className="text-center">{payment.status}</td>
                             <td className="text-center">{payment.category}</td>
-                            <td className="text-center">{payment.method}</td>
                             <td className="text-center">
                                 <Link to={`/payments/${payment.id}`} className="text-blue-500">View</Link>
                             </td>

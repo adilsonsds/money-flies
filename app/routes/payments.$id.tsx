@@ -32,9 +32,6 @@ export default function PaymentDetailsPage() {
                     <div>
                         <strong>Category:</strong> {payment.category}
                     </div>
-                    <div>
-                        <strong>Method:</strong> {payment.method}
-                    </div>
                 </div>
             }
 

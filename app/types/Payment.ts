@@ -5,7 +5,6 @@ export type Payment = {
     status: string;
     description: string;
     category: string;
-    method: string;
 };
 
 export type PaymentsList = Payment[];

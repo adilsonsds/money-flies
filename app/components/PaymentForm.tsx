@@ -39,13 +39,6 @@ export default function PaymentForm() {
                     <option value="other">Other</option>
                 </select>
             </div>
-            <div>
-                <label htmlFor="paymentMethod" className="block">Payment Method</label>
-                <select id="paymentMethod" name="method" className="mt-1 block w-full border rounded px-3 py-1">
-                    <option value="cash">Cash</option>
-                    <option value="creditCard">Credit Card</option>
-                </select>
-            </div>
             <button type="submit" className="mt-4 px-4 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 disabled={isSubmitting}>
                 {isSubmitting ? "Submitting..." : "Submit"}
