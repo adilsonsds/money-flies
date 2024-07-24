@@ -16,7 +16,7 @@ const router = createHashRouter([
     errorElement: <ErrorPage />
   },
   {
-    path: "/payments",
+    path: "/payments/list",
     element: <PaymentsList />,
   },
 ]);
