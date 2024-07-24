@@ -1,45 +1,24 @@
-import { Link } from "react-router-dom";
-import { Payment } from "../types/Payment";
+import { Link, useLocation } from "react-router-dom";
+import { getPayments } from "../data/PaymentsData";
+import { getFilterObjectFromUrl } from "../utils/PaymentUtils";
 
 export default function PaymentsList() {
-    const payments: Payment[] = [
-        {
-            id: '1',
-            date: "2021-01-01",
-            description: "Payment 1",
-            amount: 100,
-            status: "Pending",
-            category: "Category 1",
-        },
-        {
-            id: '2',
-            date: "2021-01-02",
-            description: "Payment 2",
-            amount: 200,
-            status: "Paid",
-            category: "Category 2",
-        },
-        {
-            id: "3",
-            date: "2021-01-03",
-            description: "Payment 3",
-            amount: 300,
-            status: "Paid",
-            category: "Category 3",
-        },
-    ];
+    const location = useLocation();
+    const filter = getFilterObjectFromUrl(location.search);
+    const payments = getPayments(filter);
+
     return (
         <div>
             <h1 className="text-3xl font-bold">Payments</h1>
             <table className="w-full">
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Description</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Category</th>
-                        <th>Actions</th>
+                        <th className="w-24">Date</th>
+                        <th className="w-48">Description</th>
+                        <th className="w-24">Amount</th>
+                        <th className="w-24">Status</th>
+                        <th className="w-24">Category</th>
+                        <th className="w-24">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -63,7 +42,7 @@ export default function PaymentsList() {
                     className="px-4 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     // to={`/payments/new?${getFilterURL({ startDate: new Date(filter.startDate), endDate: new Date(filter.endDate), category: filter.category })}`}
                     to="/"
-                    >
+                >
                     Add payment
                 </Link>
 

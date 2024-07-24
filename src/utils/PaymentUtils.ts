@@ -24,3 +24,15 @@ export function getFilterUrlFromPayment(payment: Payment): string {
     const lastDayOfMonth = new Date(paymentDate.getFullYear(), paymentDate.getMonth() + 1, 0);
     return `startDate=${firstDayOfMonth.toISOString().split('T')[0]}&endDate=${lastDayOfMonth.toISOString().split('T')[0]}&category=${payment.category}`;
 }
+
+export function getFilterObjectFromUrl(search: string): PaymentsFilter {
+    const queryParams = new URLSearchParams(search);
+    const startDate = queryParams.get('startDate');
+    const endDate = queryParams.get('endDate');
+    const category = queryParams.get('category');
+    return {
+        startDate: startDate ? new Date(startDate) : new Date(),
+        endDate: endDate ? new Date(endDate) : new Date(),
+        category: category || null
+    };
+}

@@ -1,4 +1,4 @@
-import { Payment } from "../types/Payment";
+import { Payment, PaymentsFilter } from "../types/Payment";
 
 export const Payments: Payment[] = [
     // generate some fake data for the payments with properties: id, date, category, amount, status, description and category
@@ -181,3 +181,12 @@ export const Payments: Payment[] = [
     
     
 ]
+
+export const getPayments = (filter: PaymentsFilter) => {
+    return Payments.filter(payment => {
+        if (filter.category && payment.category !== filter.category) {
+            return false;
+        }
+        return payment.date >= filter.startDate.toISOString() && payment.date <= filter.endDate.toISOString();
+    });
+}

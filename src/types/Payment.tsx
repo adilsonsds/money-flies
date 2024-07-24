@@ -12,5 +12,5 @@ export type PaymentsList = Payment[];
 export type PaymentsFilter = {
     startDate: Date;
     endDate: Date;
-    category?: string;
+    category?: string | null;
 };
