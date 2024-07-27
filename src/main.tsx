@@ -8,6 +8,7 @@ import {
 import './index.css'
 import ErrorPage from './ErrorPage.tsx';
 import PaymentsList from './routes/PaymentsList.tsx';
+import PaymentsNew from './routes/PaymentsNew.tsx';
 
 const router = createHashRouter([
   {
@@ -18,6 +19,10 @@ const router = createHashRouter([
   {
     path: "/payments/list",
     element: <PaymentsList />,
+  },
+  {
+    path: "/payments/new",
+    element: <PaymentsNew />,
   },
 ]);
 
