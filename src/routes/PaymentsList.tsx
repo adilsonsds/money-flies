@@ -1,11 +1,27 @@
 import { Link, useLocation } from "react-router-dom";
 import { getPayments } from "../data/PaymentsData";
 import { getFilterObjectFromUrl } from "../utils/PaymentUtils";
+import { useEffect, useState } from "react";
+import { Payment } from "../types/Payment";
 
 export default function PaymentsList() {
     const location = useLocation();
-    const filter = getFilterObjectFromUrl(location.search);
-    const payments = getPayments(filter);
+    const [payments, setPayments] = useState<Payment[]>([]);
+
+    const fetchPayments = async () => {
+        const filter = getFilterObjectFromUrl(location.search);
+        const payments = await getPayments(filter);
+        setPayments(payments);
+    };
+
+    useEffect(() => {
+        console.log('PaymentsList rendered');
+        fetchPayments();
+    }, []);
+
+    if (!payments.length) {
+        return <div>Loading...</div>
+    }
 
     return (
         <div>

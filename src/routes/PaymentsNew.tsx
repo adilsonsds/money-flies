@@ -1,16 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { createPayment } from "../data/PaymentsData";
-import { Payment } from "../types/Payment";
+import { PaymentCreate } from "../types/Payment";
 
 export default function PaymentsNew() {
     const navigate = useNavigate();
 
-    function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
         const formData = new FormData(event.currentTarget);
-        const payment: Payment = {
-            id: '',
+        const payment: PaymentCreate = {
             date: formData.get('date') as string,
             amount: Number(formData.get('amount')),
             status: formData.get('status') as string,
@@ -18,8 +17,14 @@ export default function PaymentsNew() {
             category: formData.get('category') as string
         };
 
-        createPayment(payment);
-        navigate(-1);
+        try {
+            await createPayment(payment);
+            navigate(-1);
+        }
+        catch (error) {
+            console.error('Error creating payment', error);
+            alert('Error creating payment');
+        }
     }
 
     return (

@@ -7,6 +7,8 @@ export type Payment = {
     category: string;
 };
 
+export type PaymentCreate = Omit<Payment, 'id'>;
+
 export type PaymentsList = Payment[];
 
 export type PaymentsFilter = {

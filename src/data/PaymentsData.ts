@@ -1,4 +1,4 @@
-import { Payment, PaymentsFilter } from "../types/Payment";
+import { Payment, PaymentCreate, PaymentsFilter } from "../types/Payment";
 
 export const Payments: Payment[] = [
     // generate some fake data for the payments with properties: id, date, category, amount, status, description and category
@@ -178,20 +178,36 @@ export const Payments: Payment[] = [
         status: 'paid',
         description: 'Bought some food'
     }
-    
-    
+
+
 ]
 
-export const getPayments = (filter: PaymentsFilter) => {
-    return Payments.filter(payment => {
+export const getPayments = async (filter?: PaymentsFilter) => {
+    const payments = Payments;
+
+    if (!filter) {
+        return payments
+    }
+
+    const filteredPayments = payments.filter(payment => {
         if (filter.category && payment.category !== filter.category) {
             return false;
         }
         return payment.date >= filter.startDate.toISOString() && payment.date <= filter.endDate.toISOString();
     });
+
+    return filteredPayments;
 }
 
-export const createPayment = (payment: Payment) => {
-    payment.id = (Payments.length + 1).toString();
+export const createPayment = async (createPayment: PaymentCreate) => {
+    const payment: Payment = {
+        id: new Date().getTime().toString(),
+        date: createPayment.date,
+        amount: createPayment.amount,
+        status: createPayment.status,
+        description: createPayment.description,
+        category: createPayment.category
+    };
+
     Payments.push(payment);
 }

@@ -9,6 +9,7 @@ import './index.css'
 import ErrorPage from './ErrorPage.tsx';
 import PaymentsList from './routes/PaymentsList.tsx';
 import PaymentsNew from './routes/PaymentsNew.tsx';
+import { PaymentsProvider } from './contexts/PaymentsContext.tsx';
 
 const router = createHashRouter([
   {
@@ -28,6 +29,8 @@ const router = createHashRouter([
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <PaymentsProvider>
+      <RouterProvider router={router} />
+    </PaymentsProvider>
   </React.StrictMode>,
 )

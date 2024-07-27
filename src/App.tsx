@@ -1,27 +1,10 @@
 import { Link } from 'react-router-dom'
 import './App.css'
-import { Payment } from './types/Payment';
 import { getFilterURL, getTotalValue } from './utils/PaymentUtils';
-import { Payments } from './data/PaymentsData';
-
-type Period = {
-  startDate: Date;
-  endDate: Date;
-}
+import { usePaymentsContext } from './contexts/PaymentsContext';
 
 function App() {
-  let payments: Payment[] = Payments;
-
-  const year = new Date().getFullYear();
-  const months = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-
-  const periods: Period[] = months.map(month => {
-    const startDate = new Date(year, month, 1);
-    const endDate = new Date(year, month + 1, 0);
-    return { startDate, endDate };
-  });
-
-  const categories = [...new Set(payments.map(summary => summary.category))];
+  const { payments, periods, categories } = usePaymentsContext();
 
   return (
     <div>
