@@ -190,3 +190,8 @@ export const getPayments = (filter: PaymentsFilter) => {
         return payment.date >= filter.startDate.toISOString() && payment.date <= filter.endDate.toISOString();
     });
 }
+
+export const createPayment = (payment: Payment) => {
+    payment.id = (Payments.length + 1).toString();
+    Payments.push(payment);
+}
