@@ -46,7 +46,7 @@ export function PaymentsProvider({ children }: { children: React.ReactNode }) {
     }
 
     async function createFakeData() {
-        const fakePayments: PaymentCreate[] = Array.from({ length: 5 }, (_, index) => ({
+        const fakePayments: PaymentCreate[] = Array.from({ length: 5 }, (_) => ({
             date: faker.date.between({ from: '2024-01-01', to: '2024-12-31' }).toISOString().split('T')[0],
             category: faker.helpers.arrayElement(['Food', 'Rent', 'Transport', 'Health', 'Education', 'Entertainment', 'Others', 'Salary', 'Investment', 'Gift']),
             amount: parseFloat(faker.finance.amount({ min: 1, max: 1000, dec: 2 })),
