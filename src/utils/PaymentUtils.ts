@@ -1,9 +1,9 @@
-import type { Payment, PaymentsFilter, PaymentsList } from "../types/Payment";
+import type { PaymentsFilter, PaymentsList } from "../types/Payment";
 
 export function getFilteredPayments(payments: PaymentsList, filter: PaymentsFilter): PaymentsList {
     return payments.filter(payment =>
-        new Date(payment.date) >= new Date(filter.startDate) &&
-        new Date(payment.date) <= new Date(filter.endDate) &&
+        (!filter.startDate || new Date(payment.date) >= new Date(filter.startDate)) &&
+        (!filter.endDate || new Date(payment.date) <= new Date(filter.endDate)) &&
         (!filter.category || payment.category === filter.category)
     );
 }
@@ -13,16 +13,13 @@ export function getTotalValue(payments: PaymentsList, filter: PaymentsFilter): n
 }
 
 export function getFilterURL({ startDate, endDate, category }: PaymentsFilter): string {
-    return category && category.length > 0
-        ? `startDate=${startDate.toISOString().split('T')[0]}&endDate=${endDate.toISOString().split('T')[0]}&category=${category}`
-        : `startDate=${startDate.toISOString().split('T')[0]}&endDate=${endDate.toISOString().split('T')[0]}`;
-}
+    var queryParams = new URLSearchParams();
 
-export function getFilterUrlFromPayment(payment: Payment): string {
-    const paymentDate = new Date(payment.date);
-    const firstDayOfMonth = new Date(paymentDate.getFullYear(), paymentDate.getMonth(), 1);
-    const lastDayOfMonth = new Date(paymentDate.getFullYear(), paymentDate.getMonth() + 1, 0);
-    return `startDate=${firstDayOfMonth.toISOString().split('T')[0]}&endDate=${lastDayOfMonth.toISOString().split('T')[0]}&category=${payment.category}`;
+    if (startDate) queryParams.set('startDate', startDate.toISOString().split('T')[0]);
+    if (endDate) queryParams.set('endDate', endDate.toISOString().split('T')[0]);
+    if (category) queryParams.set('category', category);
+
+    return queryParams.toString();
 }
 
 export function getFilterObjectFromUrl(search: string): PaymentsFilter {
@@ -30,9 +27,10 @@ export function getFilterObjectFromUrl(search: string): PaymentsFilter {
     const startDate = queryParams.get('startDate');
     const endDate = queryParams.get('endDate');
     const category = queryParams.get('category');
+    console.log(queryParams.toString())
     return {
-        startDate: startDate ? new Date(startDate) : new Date(),
-        endDate: endDate ? new Date(endDate) : new Date(),
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null,
         category: category || null
     };
 }

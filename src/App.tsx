@@ -18,6 +18,7 @@ function App() {
                 {period.startDate.toLocaleString('pt-BR', { month: 'short' })} {period.startDate.toLocaleString('default', { year: "2-digit" })}
               </th>
             ))}
+            <th className="text-right w-72">Total</th>
           </tr>
         </thead>
         <tbody>
@@ -34,12 +35,17 @@ function App() {
                   </td>
                 );
               })}
+              <td className="text-right">
+                <Link to={`/payments/list?${getFilterURL({ category })}`} className="text-blue-500">
+                  {getTotalValue(payments, { category }).toFixed(2)}
+                </Link>
+              </td>
             </tr>
           ))}
         </tbody>
         <tbody>
           <tr>
-            <td>Total</td>
+            <td className="text-left">Total</td>
             {periods.map((period, index) => {
               const totalValue = getTotalValue(payments, { startDate: period.startDate, endDate: period.endDate });
               return (

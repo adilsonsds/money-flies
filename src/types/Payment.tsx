@@ -12,7 +12,7 @@ export type PaymentCreate = Omit<Payment, 'id'>;
 export type PaymentsList = Payment[];
 
 export type PaymentsFilter = {
-    startDate: Date;
-    endDate: Date;
+    startDate?: Date | null;
+    endDate?: Date | null;
     category?: string | null;
 };

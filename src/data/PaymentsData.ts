@@ -22,12 +22,11 @@ export const getPayments = async (filter?: PaymentsFilter): Promise<Payment[]> =
         return payments
     }
 
-    const filteredPayments = payments.filter(payment => {
-        if (filter.category && payment.category !== filter.category) {
-            return false;
-        }
-        return payment.date >= filter.startDate.toISOString() && payment.date <= filter.endDate.toISOString();
-    });
+    const filteredPayments = payments.filter(payment => (
+        (!filter.category || payment.category === filter.category) &&
+        (!filter.startDate || payment.date >= filter.startDate.toISOString()) &&
+        (!filter.endDate || payment.date <= filter.endDate.toISOString())
+    ));
 
     filteredPayments.sort((a, b) => {
         if (a.date < b.date) return -1;
