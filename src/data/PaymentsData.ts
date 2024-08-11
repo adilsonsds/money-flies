@@ -1,8 +1,10 @@
 import { Payment, PaymentCreate, PaymentsFilter } from "../types/Payment";
 
+const LOCALSTORAGE_NAME = 'payments';
+
 const getAllPayments = (): Payment[] => {
     try {
-        const paymentsStore = localStorage.getItem('payments');
+        const paymentsStore = localStorage.getItem(LOCALSTORAGE_NAME);
         if (!paymentsStore)
             throw new Error('No payments found');
         return JSON.parse(paymentsStore);
@@ -12,7 +14,7 @@ const getAllPayments = (): Payment[] => {
 }
 
 const savePayments = (payments: Payment[]) => {
-    localStorage.setItem('payments', JSON.stringify(payments));
+    localStorage.setItem(LOCALSTORAGE_NAME, JSON.stringify(payments));
 }
 
 export const getPayments = async (filter?: PaymentsFilter): Promise<Payment[]> => {
@@ -62,6 +64,15 @@ export const createPayments = (createPayments: PaymentCreate[]) => {
     savePayments(payments);
 }
 
+export const deletePayment = (payment: Payment) => {
+    const payments = getAllPayments();
+    const index = payments.findIndex(p => p.id === payment.id);
+    if (index === -1) return;
+
+    payments.splice(index, 1);
+    savePayments(payments);
+}
+
 export const removeAllPayments = () => {
-    localStorage.removeItem('payments');
+    localStorage.removeItem(LOCALSTORAGE_NAME);
 }

@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import { Payment } from "../types/Payment";
 import { useNavigate, useParams } from "react-router-dom";
-import { getPaymentById } from "../data/PaymentsData";
+import { deletePayment, getPaymentById } from "../data/PaymentsData";
 
 export default function PaymentsDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [payment, setPayment] = useState<Payment | null>(null);
+
+    function handleDelete() {
+        if (!payment) return;
+        deletePayment(payment);
+        navigate(-1);
+    }
 
     useEffect(() => {
         if (!id) return;
@@ -41,9 +47,14 @@ export default function PaymentsDetails() {
                 <span>{payment.category}</span>
             </div>
             <button
-                className="mt-4 px-4 py-2 rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="px-4 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 onClick={() => navigate(-1)}>
-                Close
+                Back
+            </button>
+            <button
+                className="mt-4 px-4 py-2 ml-2 rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                onClick={handleDelete}>
+                Delete
             </button>
         </div>
     );
