@@ -29,6 +29,12 @@ export const getPayments = async (filter?: PaymentsFilter): Promise<Payment[]> =
         return payment.date >= filter.startDate.toISOString() && payment.date <= filter.endDate.toISOString();
     });
 
+    filteredPayments.sort((a, b) => {
+        if (a.date < b.date) return -1;
+        if (a.date > b.date) return 1;
+        return 0;
+    });
+
     return filteredPayments;
 }
 
