@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { createPayments } from "../data/PaymentsData";
 import { PaymentCreate } from "../types/Payment";
+import { BackButton } from "../components/BackButton";
 
 export default function PaymentsNew() {
     const navigate = useNavigate();
@@ -29,6 +30,7 @@ export default function PaymentsNew() {
 
     return (
         <>
+            <BackButton />
             <h1 className="text-3xl font-bold">Payment Form</h1>
             <form method="post" className="space-y-4 mt-4" onSubmit={handleSubmit}>
                 <div>
@@ -65,12 +67,6 @@ export default function PaymentsNew() {
                     Submit
                 </button>
             </form>
-
-            <button type="submit"
-                className="mt-4 px-4 py-2 rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                onClick={() => navigate(-1)}>
-                Cancel
-            </button>
         </>
     );
 }
