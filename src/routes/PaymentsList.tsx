@@ -6,12 +6,14 @@ import { Payment } from "../types/Payment";
 
 export default function PaymentsList() {
     const location = useLocation();
+    const [isLoading, setIsLoading] = useState(true);
     const [payments, setPayments] = useState<Payment[]>([]);
 
     const fetchPayments = async () => {
         const filter = getFilterObjectFromUrl(location.search);
         const payments = await getPayments(filter);
         setPayments(payments);
+        setIsLoading(false);
     };
 
     useEffect(() => {
@@ -19,39 +21,49 @@ export default function PaymentsList() {
         fetchPayments();
     }, []);
 
-    if (!payments.length) {
+    if (isLoading) {
         return <div>Loading...</div>
     }
 
     return (
         <div>
             <h1 className="text-3xl font-bold">Payments</h1>
-            <table className="w-full">
-                <thead>
-                    <tr>
-                        <th className="w-24">Date</th>
-                        <th className="w-48">Description</th>
-                        <th className="w-24">Amount</th>
-                        <th className="w-24">Status</th>
-                        <th className="w-24">Category</th>
-                        <th className="w-24">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {payments.map(payment => (
-                        <tr key={payment.id}>
-                            <td className="text-center">{payment.date}</td>
-                            <td className="text-center">{payment.description}</td>
-                            <td className="text-center">{payment.amount}</td>
-                            <td className="text-center">{payment.status}</td>
-                            <td className="text-center">{payment.category}</td>
-                            <td className="text-center">
-                                <Link to={`/payments/${payment.id}`} className="text-blue-500">View</Link>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+            {
+                payments.length > 0 && (
+                    <table className="w-full">
+                        <thead>
+                            <tr>
+                                <th className="w-24">Date</th>
+                                <th className="w-48">Description</th>
+                                <th className="w-24">Amount</th>
+                                <th className="w-24">Status</th>
+                                <th className="w-24">Category</th>
+                                <th className="w-24">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {payments.map(payment => (
+                                <tr key={payment.id}>
+                                    <td className="text-center">{payment.date}</td>
+                                    <td className="text-center">{payment.description}</td>
+                                    <td className="text-center">{payment.amount}</td>
+                                    <td className="text-center">{payment.status}</td>
+                                    <td className="text-center">{payment.category}</td>
+                                    <td className="text-center">
+                                        <Link to={`/payments/${payment.id}`} className="text-blue-500">View</Link>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )
+            }
+
+            {
+                payments.length === 0 && (
+                    <div>No payments found</div>
+                )
+            }
 
             <div className="py-4">
                 <Link type="submit"
