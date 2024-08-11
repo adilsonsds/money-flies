@@ -14,13 +14,13 @@ type Period = {
 function MetricsColumns({ totalValue, periodsCount, urlParams }: { totalValue: number; periodsCount: number; urlParams: string }) {
   return (
     <>
-      <td className="text-right">
-        <Link to={`/payments/list?${urlParams}`} className="text-blue-500">
+      <td className="p-2 text-right dark:text-white">
+        <Link to={`/payments/list?${urlParams}`} className="dark:text-blue-300">
           {totalValue.toFixed(2)}
         </Link>
       </td>
-      <td className="text-right">
-        <Link to={`/payments/list?${urlParams}`} className="text-blue-500">
+      <td className="p-2 text-right dark:text-white">
+        <Link to={`/payments/list?${urlParams}`} className="dark:text-blue-300">
           {(totalValue / periodsCount).toFixed(2)}
         </Link>
       </td>
@@ -74,58 +74,62 @@ function App() {
   return (
     <div>
       <h1 className="text-3xl font-bold p-4">Summary</h1>
-      <table className="mt-2 w-full">
-        <thead>
-          <tr>
-            <th className="text-left">#</th>
-            {periods.map((period, index) => (
-              <th key={index} className="text-right w-72">
-                {period.startDate.toLocaleString('pt-BR', { month: 'short' })} {period.startDate.toLocaleString('default', { year: "2-digit" })}
-              </th>
+      <div className="overflow-x-auto">
+
+        <table className="min-w-full bg-white dark:bg-gray-700 shadow-md rounded-lg overflow-hidden">
+          <thead className="bg-gray-200 dark:bg-gray-500">
+            <tr>
+              <th className="w-36 p-4 text-center dark:text-white">#</th>
+              {periods.map((period, index) => (
+                <th key={index} className="w-72 p-4 text-center dark:text-white">
+                  {period.startDate.toLocaleString('pt-BR', { month: 'short' })} {period.startDate.toLocaleString('default', { year: "2-digit" })}
+                </th>
+              ))}
+              <th className="w-36 p-4 text-center dark:text-white">Total</th>
+              <th className="w-36 p-4 text-center dark:text-white">Average</th>
+            </tr>
+          </thead>
+          <tbody>
+            {categories.map((category, index) => (
+              <tr key={index} className="border-b hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-600">
+                <td className="p-2 text-left dark:text-white">{category}</td>
+                {periods.map((period, index) => {
+                  const totalValue = getTotalValue(payments, { startDate: period.startDate, endDate: period.endDate, category: category });
+                  return (
+                    <td key={index} className="p-2 text-right dark:text-white">
+                      <Link to={`/payments/list?${getFilterURL({ startDate: period.startDate, endDate: period.endDate, category })}`} className="dark:text-blue-300">
+                        {totalValue.toFixed(2)}
+                      </Link>
+                    </td>
+                  );
+                })}
+                <MetricsColumns
+                  totalValue={getTotalValue(payments, { category })}
+                  periodsCount={periods.length}
+                  urlParams={getFilterURL({ category })}
+                />
+              </tr>
             ))}
-            <th className="text-right w-72">Total</th>
-            <th className="text-right w-72">Average</th>
-          </tr>
-        </thead>
-        <tbody>
-          {categories.map((category, index) => (
-            <tr key={index}>
-              <td className="text-left">{category}</td>
+          </tbody>
+          <tbody>
+            <tr>
+              <td className="p-2 text-left dark:text-white">Total</td>
               {periods.map((period, index) => {
-                const totalValue = getTotalValue(payments, { startDate: period.startDate, endDate: period.endDate, category: category });
+                const totalValue = getTotalValue(payments, { startDate: period.startDate, endDate: period.endDate });
                 return (
-                  <td key={index} className="text-right">
-                    <Link to={`/payments/list?${getFilterURL({ startDate: period.startDate, endDate: period.endDate, category })}`} className="text-blue-500">
+                  <td key={index} className="p-2 text-right dark:text-white">
+                    <Link to={`/payments/list?${getFilterURL({ startDate: period.startDate, endDate: period.endDate })}`} className="dark:text-blue-300">
                       {totalValue.toFixed(2)}
                     </Link>
                   </td>
                 );
               })}
-              <MetricsColumns
-                totalValue={getTotalValue(payments, { category })}
-                periodsCount={periods.length}
-                urlParams={getFilterURL({ category })}
-              />
+              <td></td>
+              <td></td>
             </tr>
-          ))}
-        </tbody>
-        <tbody>
-          <tr>
-            <td className="text-left">Total</td>
-            {periods.map((period, index) => {
-              const totalValue = getTotalValue(payments, { startDate: period.startDate, endDate: period.endDate });
-              return (
-                <td key={index} className="text-right">
-                  <Link to={`/payments/list?${getFilterURL({ startDate: period.startDate, endDate: period.endDate })}`} className="text-blue-500">
-                    {totalValue.toFixed(2)}
-                  </Link>
-                </td>
-              );
-            })}
-          </tr>
-        </tbody>
-      </table>
-
+          </tbody>
+        </table>
+      </div>
       <button className="mt-20 text-blue-500" onClick={createFakeData}>
         Add fake payments to test
       </button>

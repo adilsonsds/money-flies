@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Payment } from "../types/Payment";
 import { useNavigate, useParams } from "react-router-dom";
 import { deletePayment, getPaymentById } from "../data/PaymentsData";
-import { BackButton } from "../components/BackButton";
+import PageTitle from "../components/PageTitle";
 
 export default function PaymentsDetails() {
     const { id } = useParams();
@@ -26,8 +26,7 @@ export default function PaymentsDetails() {
 
     return (
         <div>
-            <BackButton />
-            <h1 className="text-3xl font-bold">Payment Details</h1>
+            <PageTitle title="Payments details" />
             <div>
                 <label>Date:</label>
                 <span>{payment.date}</span>

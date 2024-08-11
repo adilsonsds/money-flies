@@ -3,8 +3,8 @@ import { getPayments, updatePayment } from "../data/PaymentsData";
 import { getFilterObjectFromUrl } from "../utils/PaymentUtils";
 import { useEffect, useState } from "react";
 import { Payment, PaymentStatusEnum } from "../types/Payment";
-import { BackButton } from "../components/BackButton";
 import { Checkbox } from "../components/Checkbox";
+import PageTitle from "../components/PageTitle";
 
 export default function PaymentsList() {
     const location = useLocation();
@@ -37,47 +37,44 @@ export default function PaymentsList() {
 
     return (
         <div>
-            <BackButton />
-            <h1 className="text-3xl font-bold">Payments</h1>
+            <PageTitle title="Payments" />
             {
-                payments.length > 0 && (
-                    <table className="w-full">
-                        <thead>
-                            <tr>
-                                <th className="w-24">Date</th>
-                                <th className="w-48">Description</th>
-                                <th className="w-24">Amount</th>
-                                <th className="w-24">Status</th>
-                                <th className="w-24">Category</th>
-                                <th className="w-24">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {payments.map(payment => (
-                                <tr key={payment.id}>
-                                    <td className="text-center">{payment.date}</td>
-                                    <td className="text-center">{payment.description}</td>
-                                    <td className="text-center">{payment.amount}</td>
-                                    <td className="text-center">
-                                        <Checkbox
-                                            checked={payment.status == PaymentStatusEnum.PAID}
-                                            onChange={() => handlePaymentStatusChange(payment)}
-                                        />
-                                    </td>
-                                    <td className="text-center">{payment.category}</td>
-                                    <td className="text-center">
-                                        <Link to={`/payments/${payment.id}`} className="text-blue-500">View</Link>
-                                    </td>
+                payments.length > 0 ? (
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full bg-white dark:bg-gray-700 shadow-md rounded-lg overflow-hidden">
+                            <thead className="bg-gray-200 dark:bg-gray-500">
+                                <tr>
+                                    <th className="w-36 p-4 text-center dark:text-white">Date</th>
+                                    <th className="w-48 p-4 text-center dark:text-white">Category</th>
+                                    <th className="w-24 p-4 text-center dark:text-white">Amount</th>
+                                    <th className="w-24 p-4 text-center dark:text-white">Paid</th>
+                                    <th className="w-60 p-4 text-center dark:text-white">Description</th>
+                                    <th className="w-24 p-4 text-center dark:text-white">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )
-            }
-
-            {
-                payments.length === 0 && (
-                    <div>No payments found</div>
+                            </thead>
+                            <tbody>
+                                {payments.map(payment => (
+                                    <tr key={payment.id} className="border-b hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-600">
+                                        <td className="p-4 text-center dark:text-white">{payment.date}</td>
+                                        <td className="p-4 text-center dark:text-white">{payment.category}</td>
+                                        <td className="p-4 text-center dark:text-white">{payment.amount}</td>
+                                        <td className="p-4 text-center">
+                                            <Checkbox
+                                                checked={payment.status === PaymentStatusEnum.PAID}
+                                                onChange={() => handlePaymentStatusChange(payment)}
+                                            />
+                                        </td>
+                                        <td className="p-4 text-center dark:text-white">{payment.description}</td>
+                                        <td className="p-4 text-center">
+                                            <Link to={`/payments/${payment.id}`} className="text-blue-500 dark:text-blue-300 hover:underline">View</Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <p className="text-center text-gray-500 dark:text-gray-400">No payments found.</p>
                 )
             }
 

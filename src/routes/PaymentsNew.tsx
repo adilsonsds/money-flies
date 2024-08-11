@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { createPayments } from "../data/PaymentsData";
 import { PaymentCreate } from "../types/Payment";
-import { BackButton } from "../components/BackButton";
+import PageTitle from "../components/PageTitle";
 
 export default function PaymentsNew() {
     const navigate = useNavigate();
@@ -30,8 +30,7 @@ export default function PaymentsNew() {
 
     return (
         <>
-            <BackButton />
-            <h1 className="text-3xl font-bold">Payment Form</h1>
+            <PageTitle title="New payment" />
             <form method="post" className="space-y-4 mt-4" onSubmit={handleSubmit}>
                 <div>
                     <label htmlFor="paymentDate" className="block">Date</label>
