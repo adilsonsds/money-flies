@@ -37,12 +37,18 @@ export const getPayments = async (filter?: PaymentsFilter): Promise<Payment[]> =
     return filteredPayments;
 }
 
+export const getPaymentById = (id: string): Payment | null => {
+    const payments = getAllPayments();
+    return payments.find(payment => payment.id === id) || null;
+}
+
 export const createPayments = (createPayments: PaymentCreate[]) => {
     const payments = getAllPayments();
+    let newId = payments.length;
 
     createPayments.forEach(createPayment => {
         const payment: Payment = {
-            id: new Date().getTime().toString(),
+            id: (++newId).toString(),
             date: createPayment.date,
             amount: createPayment.amount,
             status: createPayment.status,

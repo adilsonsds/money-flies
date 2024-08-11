@@ -10,6 +10,7 @@ import ErrorPage from './ErrorPage.tsx';
 import PaymentsList from './routes/PaymentsList.tsx';
 import PaymentsNew from './routes/PaymentsNew.tsx';
 import { PaymentsProvider } from './contexts/PaymentsContext.tsx';
+import PaymentsDetails from './routes/PaymentsDetails.tsx';
 
 const router = createHashRouter([
   {
@@ -25,6 +26,10 @@ const router = createHashRouter([
     path: "/payments/new",
     element: <PaymentsNew />,
   },
+  {
+    path: "/payments/:id",
+    element: <PaymentsDetails />,
+  }
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
