@@ -64,6 +64,15 @@ export const createPayments = (createPayments: PaymentCreate[]) => {
     savePayments(payments);
 }
 
+export const updatePayment = (payment: Payment) => {
+    const payments = getAllPayments();
+    const index = payments.findIndex(p => p.id === payment.id);
+    if (index === -1) return;
+
+    payments[index] = payment;
+    savePayments(payments);
+}
+
 export const deletePayment = (payment: Payment) => {
     const payments = getAllPayments();
     const index = payments.findIndex(p => p.id === payment.id);

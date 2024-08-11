@@ -37,7 +37,7 @@ function App() {
       date: faker.date.between({ from: '2024-01-01', to: '2024-12-31' }).toISOString().split('T')[0],
       category: faker.helpers.arrayElement(['Food', 'Rent', 'Transport', 'Health', 'Education', 'Entertainment', 'Others', 'Salary', 'Investment', 'Gift']),
       amount: parseFloat(faker.finance.amount({ min: 1, max: 1000, dec: 2 })),
-      status: faker.helpers.arrayElement(['Pending', 'Paid']),
+      status: faker.helpers.arrayElement(['paid', 'unpaid']),
       description: faker.lorem.words({ min: 3, max: 6 })
     }));
 

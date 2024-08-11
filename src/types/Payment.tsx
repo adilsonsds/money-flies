@@ -7,6 +7,11 @@ export type Payment = {
     category: string;
 };
 
+export enum PaymentStatusEnum {
+    PAID = 'paid',
+    UNPAID = 'unpaid'
+}
+
 export type PaymentCreate = Omit<Payment, 'id'>;
 
 export type PaymentsList = Payment[];

@@ -1,9 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
-import { getPayments } from "../data/PaymentsData";
+import { getPayments, updatePayment } from "../data/PaymentsData";
 import { getFilterObjectFromUrl } from "../utils/PaymentUtils";
 import { useEffect, useState } from "react";
-import { Payment } from "../types/Payment";
+import { Payment, PaymentStatusEnum } from "../types/Payment";
 import { BackButton } from "../components/BackButton";
+import { Checkbox } from "../components/Checkbox";
 
 export default function PaymentsList() {
     const location = useLocation();
@@ -17,6 +18,14 @@ export default function PaymentsList() {
         setIsLoading(false);
     };
 
+    function handlePaymentStatusChange(payment: Payment) {
+        payment.status = payment.status === PaymentStatusEnum.PAID
+            ? PaymentStatusEnum.UNPAID
+            : PaymentStatusEnum.PAID;
+
+        updatePayment(payment);
+    }
+
     useEffect(() => {
         console.log('PaymentsList rendered');
         fetchPayments();
@@ -27,7 +36,7 @@ export default function PaymentsList() {
     }
 
     return (
-        <div>            
+        <div>
             <BackButton />
             <h1 className="text-3xl font-bold">Payments</h1>
             {
@@ -49,7 +58,12 @@ export default function PaymentsList() {
                                     <td className="text-center">{payment.date}</td>
                                     <td className="text-center">{payment.description}</td>
                                     <td className="text-center">{payment.amount}</td>
-                                    <td className="text-center">{payment.status}</td>
+                                    <td className="text-center">
+                                        <Checkbox
+                                            checked={payment.status == PaymentStatusEnum.PAID}
+                                            onChange={() => handlePaymentStatusChange(payment)}
+                                        />
+                                    </td>
                                     <td className="text-center">{payment.category}</td>
                                     <td className="text-center">
                                         <Link to={`/payments/${payment.id}`} className="text-blue-500">View</Link>
