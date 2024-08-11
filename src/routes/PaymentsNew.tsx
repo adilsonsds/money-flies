@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { createPayment } from "../data/PaymentsData";
+import { createPayments } from "../data/PaymentsData";
 import { PaymentCreate } from "../types/Payment";
 
 export default function PaymentsNew() {
     const navigate = useNavigate();
 
-    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
         const formData = new FormData(event.currentTarget);
@@ -18,7 +18,7 @@ export default function PaymentsNew() {
         };
 
         try {
-            await createPayment(payment);
+            createPayments([payment]);
             navigate(-1);
         }
         catch (error) {

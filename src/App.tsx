@@ -4,7 +4,7 @@ import { getFilterURL, getTotalValue } from './utils/PaymentUtils';
 import { usePaymentsContext } from './contexts/PaymentsContext';
 
 function App() {
-  const { payments, periods, categories } = usePaymentsContext();
+  const { payments, periods, categories, createFakeData, clearData } = usePaymentsContext();
 
   return (
     <div>
@@ -29,7 +29,7 @@ function App() {
                 return (
                   <td key={index} className="text-right">
                     <Link to={`/payments/list?${getFilterURL({ startDate: period.startDate, endDate: period.endDate, category })}`} className="text-blue-500">
-                      {totalValue}
+                      {totalValue.toFixed(2)}
                     </Link>
                   </td>
                 );
@@ -45,7 +45,7 @@ function App() {
               return (
                 <td key={index} className="text-right">
                   <Link to={`/payments/list?${getFilterURL({ startDate: period.startDate, endDate: period.endDate })}`} className="text-blue-500">
-                    {totalValue}
+                    {totalValue.toFixed(2)}
                   </Link>
                 </td>
               );
@@ -53,6 +53,13 @@ function App() {
           </tr>
         </tbody>
       </table>
+
+      <button className="mt-20 text-blue-500" onClick={createFakeData}>
+        Add fake payments to test
+      </button>
+      <button className="mt-20 ml-4 text-red-500" onClick={clearData}>
+        Clear all data
+      </button>
     </div>
   );
 }

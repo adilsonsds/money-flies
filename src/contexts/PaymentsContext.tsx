@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { Payment } from "../types/Payment";
-import { getPayments } from "../data/PaymentsData";
+import { Payment, PaymentCreate } from "../types/Payment";
+import { createPayments, getPayments, removeAllPayments } from "../data/PaymentsData";
+import { faker } from '@faker-js/faker';
 
 type Period = {
     startDate: Date;
@@ -11,12 +12,16 @@ type PaymentContextType = {
     payments: Payment[];
     periods: Period[];
     categories: string[];
+    createFakeData: () => Promise<void>;
+    clearData: () => Promise<void>;
 };
 
 const PaymentsContext = createContext<PaymentContextType>({
     payments: [],
     periods: [],
-    categories: []
+    categories: [],
+    createFakeData: async () => { },
+    clearData: async () => { }
 });
 
 export function PaymentsProvider({ children }: { children: React.ReactNode }) {
@@ -40,12 +45,30 @@ export function PaymentsProvider({ children }: { children: React.ReactNode }) {
         setCategories([...new Set(payments.map(summary => summary.category))]);
     }
 
+    async function createFakeData() {
+        const fakePayments: PaymentCreate[] = Array.from({ length: 5 }, (_, index) => ({
+            date: faker.date.between({ from: '2024-01-01', to: '2024-12-31' }).toISOString().split('T')[0],
+            category: faker.helpers.arrayElement(['Food', 'Rent', 'Transport', 'Health', 'Education', 'Entertainment', 'Others', 'Salary', 'Investment', 'Gift']),
+            amount: parseFloat(faker.finance.amount({ min: 1, max: 1000, dec: 2 })),
+            status: faker.helpers.arrayElement(['Pending', 'Paid']),
+            description: faker.lorem.words({ min: 3, max: 6 })
+        }));
+
+        createPayments(fakePayments);
+        handlePayments();
+    }
+
+    async function clearData(): Promise<void> {
+        removeAllPayments();
+        handlePayments();
+    }
+
     useEffect(() => {
         handlePayments();
     }, []);
 
     return (
-        <PaymentsContext.Provider value={{ payments, periods, categories }}>
+        <PaymentsContext.Provider value={{ payments, periods, categories, createFakeData, clearData }}>
             {children}
         </PaymentsContext.Provider>
     );
