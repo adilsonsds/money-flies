@@ -11,6 +11,23 @@ type Period = {
   endDate: Date;
 }
 
+function MetricsColumns({ totalValue, periodsCount, urlParams }: { totalValue: number; periodsCount: number; urlParams: string }) {
+  return (
+    <>
+      <td className="text-right">
+        <Link to={`/payments/list?${urlParams}`} className="text-blue-500">
+          {totalValue.toFixed(2)}
+        </Link>
+      </td>
+      <td className="text-right">
+        <Link to={`/payments/list?${urlParams}`} className="text-blue-500">
+          {(totalValue / periodsCount).toFixed(2)}
+        </Link>
+      </td>
+    </>
+  )
+}
+
 function App() {
   const [periods, setPeriods] = useState<Period[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -49,7 +66,7 @@ function App() {
     removeAllPayments();
     handlePayments();
   }
-  
+
   useEffect(() => {
     handlePayments();
   }, []);
@@ -67,6 +84,7 @@ function App() {
               </th>
             ))}
             <th className="text-right w-72">Total</th>
+            <th className="text-right w-72">Average</th>
           </tr>
         </thead>
         <tbody>
@@ -83,11 +101,11 @@ function App() {
                   </td>
                 );
               })}
-              <td className="text-right">
-                <Link to={`/payments/list?${getFilterURL({ category })}`} className="text-blue-500">
-                  {getTotalValue(payments, { category }).toFixed(2)}
-                </Link>
-              </td>
+              <MetricsColumns
+                totalValue={getTotalValue(payments, { category })}
+                periodsCount={periods.length}
+                urlParams={getFilterURL({ category })}
+              />
             </tr>
           ))}
         </tbody>
