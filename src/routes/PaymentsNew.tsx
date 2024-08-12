@@ -13,7 +13,7 @@ export default function PaymentsNew() {
         const payment: PaymentCreate = {
             date: formData.get('date') as string,
             amount: Number(formData.get('amount')),
-            status: formData.get('status') as string,
+            paid: formData.get('paid') === 'on',
             description: formData.get('description') as string,
             category: formData.get('category') as string
         };
@@ -41,11 +41,8 @@ export default function PaymentsNew() {
                     <input id="paymentAmount" type="number" name="amount" className="mt-1 block w-full border rounded px-3 py-1" />
                 </div>
                 <div>
-                    <label htmlFor="paymentStatus" className="block">Status</label>
-                    <select id="paymentStatus" name="status" className="mt-1 block w-full border rounded px-3 py-1">
-                        <option value="paid">Paid</option>
-                        <option value="pending">Pending</option>
-                    </select>
+                    <label htmlFor="paymentPaid" className="block">Paid</label>
+                    <input id="paymentPaid" type="checkbox" name="paid" className="mt-1" />
                 </div>
                 <div>
                     <label htmlFor="paymentDescription" className="block">Description</label>

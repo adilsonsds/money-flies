@@ -40,8 +40,8 @@ export default function PaymentsDetails() {
                 <span>{payment.amount}</span>
             </div>
             <div>
-                <label>Status:</label>
-                <span>{payment.status}</span>
+                <label>Paid:</label>
+                <span>{payment.paid ? 'Yes': 'No' }</span>
             </div>
             <div>
                 <label>Category:</label>

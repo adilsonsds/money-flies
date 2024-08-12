@@ -54,8 +54,8 @@ function App() {
       date: faker.date.between({ from: '2024-01-01', to: '2024-12-31' }).toISOString().split('T')[0],
       category: faker.helpers.arrayElement(['Food', 'Rent', 'Transport', 'Health', 'Education', 'Entertainment', 'Others', 'Salary', 'Investment', 'Gift']),
       amount: parseFloat(faker.finance.amount({ min: 1, max: 1000, dec: 2 })),
-      status: faker.helpers.arrayElement(['paid', 'unpaid']),
-      description: faker.lorem.words({ min: 3, max: 6 })
+      paid: faker.datatype.boolean(),
+      description: faker.lorem.words({ min: 1, max: 4 })
     }));
 
     createPayments(fakePayments);
@@ -68,8 +68,8 @@ function App() {
   }
 
   function exportDataToCSV() {
-    const csv = `Date,Category,Amount,Status,Description\n` + payments.map(payment => {
-      return `${payment.date},${payment.category},${payment.amount},${payment.status},${payment.description}`;
+    const csv = `Date,Category,Amount,Paid,Description\n` + payments.map(payment => {
+      return `${payment.date},${payment.category},${payment.amount},${payment.paid},${payment.description}`;
     }).join('\n');
 
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -93,12 +93,12 @@ function App() {
         const text = await file.text();
         const lines = text.split('\n');
         const payments = lines.slice(1).map(line => {
-          const [date, category, amount, status, description] = line.split(',');
+          const [date, category, amount, paid, description] = line.split(',');
           return {
             date,
             category,
             amount: parseFloat(amount),
-            status: status === 'paid' ? 'paid' : 'unpaid',
+            paid: paid.toLowerCase() === 'true',
             description
           };
         });
@@ -154,7 +154,7 @@ function App() {
               </tr>
             ))}
           </tbody>
-          <tbody>
+          <tfoot>
             <tr>
               <td className="p-2 text-left dark:text-white">Total</td>
               {periods.map((period, index) => {
@@ -170,7 +170,7 @@ function App() {
               <td></td>
               <td></td>
             </tr>
-          </tbody>
+          </tfoot>
         </table>
       </div>
       <button className="mt-20 text-blue-500" onClick={readDataFromCSV}>

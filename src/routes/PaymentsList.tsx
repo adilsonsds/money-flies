@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { getPayments, updatePayment } from "../data/PaymentsData";
 import { getFilterObjectFromUrl } from "../utils/PaymentUtils";
 import { useEffect, useState } from "react";
-import { Payment, PaymentStatusEnum } from "../types/Payment";
+import { Payment } from "../types/Payment";
 import { Checkbox } from "../components/Checkbox";
 import PageTitle from "../components/PageTitle";
 
@@ -19,10 +19,7 @@ export default function PaymentsList() {
     };
 
     function handlePaymentStatusChange(payment: Payment) {
-        payment.status = payment.status === PaymentStatusEnum.PAID
-            ? PaymentStatusEnum.UNPAID
-            : PaymentStatusEnum.PAID;
-
+        payment.paid = !payment.paid;
         updatePayment(payment);
     }
 
@@ -60,7 +57,7 @@ export default function PaymentsList() {
                                         <td className="p-4 text-center dark:text-white">{payment.amount}</td>
                                         <td className="p-4 text-center">
                                             <Checkbox
-                                                checked={payment.status === PaymentStatusEnum.PAID}
+                                                checked={payment.paid}
                                                 onChange={() => handlePaymentStatusChange(payment)}
                                             />
                                         </td>

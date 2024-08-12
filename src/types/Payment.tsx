@@ -2,15 +2,10 @@ export type Payment = {
     id: string;
     date: string;
     amount: number;
-    status: string;
+    paid: boolean;
     description: string;
     category: string;
 };
-
-export enum PaymentStatusEnum {
-    PAID = 'paid',
-    UNPAID = 'unpaid'
-}
 
 export type PaymentCreate = Omit<Payment, 'id'>;
 

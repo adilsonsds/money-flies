@@ -53,7 +53,7 @@ export const createPayments = (createPayments: PaymentCreate[]) => {
             id: (++newId).toString(),
             date: createPayment.date,
             amount: createPayment.amount,
-            status: createPayment.status,
+            paid: createPayment.paid,
             description: createPayment.description,
             category: createPayment.category
         };
