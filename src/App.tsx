@@ -67,6 +67,49 @@ function App() {
     handlePayments();
   }
 
+  function exportDataToCSV() {
+    const csv = `Date,Category,Amount,Status,Description\n` + payments.map(payment => {
+      return `${payment.date},${payment.category},${payment.amount},${payment.status},${payment.description}`;
+    }).join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', 'payments.csv');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  function readDataFromCSV() {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', '.csv');
+    input.addEventListener('change', async () => {
+      const file = input.files?.item(0);
+      if (file) {
+        const text = await file.text();
+        const lines = text.split('\n');
+        const payments = lines.slice(1).map(line => {
+          const [date, category, amount, status, description] = line.split(',');
+          return {
+            date,
+            category,
+            amount: parseFloat(amount),
+            status: status === 'paid' ? 'paid' : 'unpaid',
+            description
+          };
+        });
+        removeAllPayments();
+        createPayments(payments);
+        handlePayments();
+      }
+    });
+    input.click();
+  }
+
   useEffect(() => {
     handlePayments();
   }, []);
@@ -130,7 +173,13 @@ function App() {
           </tbody>
         </table>
       </div>
-      <button className="mt-20 text-blue-500" onClick={createFakeData}>
+      <button className="mt-20 text-blue-500" onClick={readDataFromCSV}>
+        Import data from CSV
+      </button>
+      <button className="mt-20 ml-4 text-blue-500" onClick={exportDataToCSV}>
+        Export data to CSV
+      </button>
+      <button className="mt-20 ml-4 text-blue-500" onClick={createFakeData}>
         Add fake payments to test
       </button>
       <button className="mt-20 ml-4 text-red-500" onClick={clearData}>
