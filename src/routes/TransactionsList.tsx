@@ -5,6 +5,7 @@ import { Checkbox } from "../components/Checkbox";
 import PageTitle from "../components/PageTitle";
 import { TransactionItemList } from "../types/Activity";
 import { getTransactions, toggleTransactionPaidValue } from "../data/ActivitiesData";
+import { TransactionsTable } from "../components/TransactionsTable";
 
 export default function TransactionsList() {
     const location = useLocation();
@@ -32,20 +33,10 @@ export default function TransactionsList() {
             <PageTitle title="Transactions" />
             {
                 transactions.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <div className="grid grid-cols-7 gap-px bg-gray-400">
-                            <div className="p-2 bg-white">#</div>
-                            <div className="p-2 bg-white">Date</div>
-                            <div className="p-2 bg-white">Category</div>
-                            <div className="p-2 bg-white">Amount</div>
-                            <div className="p-2 bg-white">Paid</div>
-                            <div className="p-2 bg-white">Description</div>
-                            <div className="p-2 bg-white">Actions</div>
-                            {transactions.map((transaction, index) => (
-                                <TableRow key={index} transaction={transaction} index={index} />
-                            ))}
-                        </div>
-                    </div>
+                    <TransactionsTable
+                        transactions={transactions}
+                        enableEdit={false}
+                    />
                 ) : (
                     <p className="text-center text-gray-500 dark:text-gray-400">No payments found.</p>
                 )

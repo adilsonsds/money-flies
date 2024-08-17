@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { Category, FinancialActivityCreate, FinancialTransactionCreate } from "../types/Activity";
-import { createActivities, getAllCategories } from "../data/ActivitiesData";
+import { FinancialActivityCreate, FinancialTransactionCreate } from "../types/Activity";
+import { createActivities } from "../data/ActivitiesData";
 import PageTitle from "../components/PageTitle";
 import { useEffect, useState } from "react";
 import { TransactionsTable } from "../components/TransactionsTable";
@@ -10,7 +10,6 @@ export default function ActivitiesNew() {
 
     const [title, setTitle] = useState('');
     const [transactions, setTransactions] = useState<FinancialTransactionCreate[]>([]);
-    const [categoriesOptions, setCategoriesOptions] = useState<Category[]>([]);
 
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -49,14 +48,6 @@ export default function ActivitiesNew() {
     }
 
     function handleOnLoad() {
-
-        const categories = getAllCategories();
-
-        setCategoriesOptions(categories.map(category => ({
-            value: category,
-            label: category
-        })));
-
         setTransactions([
             {
                 date: new Date().toISOString().split('T')[0],
@@ -89,9 +80,13 @@ export default function ActivitiesNew() {
                 </div>
                 <div className="overflow-x-auto">
                     <TransactionsTable
-                        transactions={transactions}
-                        categoriesOptions={categoriesOptions}
+                        transactions={transactions.map((transaction) => ({
+                            ...transaction,
+                            id: '',
+                            financialActivityId: ''
+                        }))}
                         onChange={handleTransactionChange}
+                        enableEdit={true}
                     />
                 </div>
                 <div>

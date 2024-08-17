@@ -1,22 +1,36 @@
-import { Category, FinancialTransactionCreate } from "../types/Activity";
+import { useEffect, useState } from "react";
+import { Category, TransactionItemList } from "../types/Activity";
+import { getAllCategories } from "../data/ActivitiesData";
+import { Link } from "react-router-dom";
 
 type TransactionsTableProps = {
-    transactions: FinancialTransactionCreate[];
-    categoriesOptions: Category[];
-    onChange: (index: number, key: string, value: string | number | boolean) => void;
+    transactions: TransactionItemList[];
+    onChange?: (index: number, key: string, value: string | number | boolean) => void;
+    enableEdit: boolean;
 }
 
-export const TransactionsTable = ({ transactions, categoriesOptions, onChange }: TransactionsTableProps) => {
+export const TransactionsTable = ({ transactions, onChange, enableEdit }: TransactionsTableProps) => {
+    const [categoriesOptions, setCategoriesOptions] = useState<Category[]>([]);
+
+    useEffect(() => {
+        if (!enableEdit) return;
+        const categories = getAllCategories();
+        setCategoriesOptions(categories.map(category => ({
+            value: category,
+            label: category
+        })));
+    }, []);
+
     return (
         <div className="overflow-x-auto">
-            <div className="grid grid-cols-7 gap-px bg-gray-400">
-                <div className="p-2 bg-gray-200 font-bold">#</div>
-                <div className="p-2 bg-gray-200 font-bold">Date</div>
-                <div className="p-2 bg-gray-200 font-bold">Category</div>
-                <div className="p-2 bg-gray-200 font-bold">Amount</div>
-                <div className="p-2 bg-gray-200 font-bold">Paid</div>
-                <div className="p-2 bg-gray-200 font-bold">Description</div>
-                <div className="p-2 bg-gray-200 font-bold">#</div>
+            <div className="grid grid-cols-12 gap-px bg-gray-400">
+                <div className="col-span-1 p-2 bg-gray-200 font-bold text-center">#</div>
+                <div className="col-span-2 p-2 bg-gray-200 font-bold text-center">Date</div>
+                <div className="col-span-2 p-2 bg-gray-200 font-bold text-center">Category</div>
+                <div className="col-span-2 p-2 bg-gray-200 font-bold text-center">Amount</div>
+                <div className="col-span-1 p-2 bg-gray-200 font-bold text-center">Paid</div>
+                <div className="col-span-3 p-2 bg-gray-200 font-bold text-center">Description</div>
+                <div className="col-span-1 p-2 bg-gray-200 font-bold text-center">#</div>
                 {transactions.map((transaction, index) => (
                     <TableRow
                         key={index}
@@ -24,6 +38,8 @@ export const TransactionsTable = ({ transactions, categoriesOptions, onChange }:
                         transaction={transaction}
                         onChange={onChange}
                         categoriesOptions={categoriesOptions}
+                        enableEdit={enableEdit}
+                        financialActivityId={transaction.financialActivityId}
                     />
                 ))}
             </div>
@@ -33,30 +49,47 @@ export const TransactionsTable = ({ transactions, categoriesOptions, onChange }:
 
 type TableRowProps = {
     index: number;
-    transaction: FinancialTransactionCreate;
-    onChange: (index: number, key: string, value: string | number | boolean) => void;
+    transaction: TransactionItemList;
+    onChange?: (index: number, key: string, value: string | number | boolean) => void;
     categoriesOptions: Category[];
+    enableEdit: boolean;
+    financialActivityId?: string;
 }
 
-export const TableRow = ({ index, transaction, onChange, categoriesOptions }: TableRowProps) => {
+export const TableRow = ({ index, transaction, onChange, categoriesOptions, enableEdit, financialActivityId }: TableRowProps) => {
+    if (!enableEdit) {
+        return (
+            <>
+                <div className="col-span-1 p-2 bg-white text-center">{index + 1}</div>
+                <div className="col-span-2 p-2 bg-white text-center">{transaction.date}</div>
+                <div className="col-span-2 p-2 bg-white text-center">{transaction.category}</div>
+                <div className="col-span-2 p-2 bg-white text-center">{transaction.amount}</div>
+                <div className="col-span-1 p-2 bg-white text-center">{transaction.paid ? 'Yes' : 'No'}</div>
+                <div className="col-span-3 p-2 bg-white text-center">{transaction.description}</div>
+                <div className="col-span-1 p-2 bg-white text-center">
+                    <Link to={`/activities/edit/${financialActivityId}`} className="text-blue-500 dark:text-blue-300 hover:underline">View</Link>
+                </div>
+            </>
+        )
+    }
     return (
         <>
-            <div className="p-2 bg-white">{index + 1}</div>
-            <div className="p-2 bg-white">
+            <div className="col-span-1 p-2 bg-white text-center">{index + 1}</div>
+            <div className="col-span-2 p-2 bg-white text-center">
                 <input
                     type="date"
                     name={`transactions[${index}].date`}
                     className="w-36 border rounded px-3 py-1"
                     value={transaction.date}
-                    onChange={event => onChange(index, 'date', event.target.value)}
+                    onChange={event => onChange?.(index, 'date', event.target.value)}
                 />
             </div>
-            <div className="p-2 bg-white">
+            <div className="col-span-2 p-2 bg-white text-center">
                 <select
                     name={`transactions[${index}].category`}
                     className="w-36 border rounded px-3 py-1"
                     value={transaction.category}
-                    onChange={event => onChange(index, 'category', event.target.value)}
+                    onChange={event => onChange?.(index, 'category', event.target.value)}
                 >
                     <option value="">Select category</option>
                     {categoriesOptions.map(option => (
@@ -64,34 +97,34 @@ export const TableRow = ({ index, transaction, onChange, categoriesOptions }: Ta
                     ))}
                 </select>
             </div>
-            <div className="p-2 bg-white">
+            <div className="col-span-2 p-2 bg-white text-center">
                 <input
                     type="number"
                     name={`transactions[${index}].amount`}
                     className="w-24 border rounded px-3 py-1"
                     value={transaction.amount}
-                    onChange={event => onChange(index, 'amount', parseFloat(event.target.value))}
+                    onChange={event => onChange?.(index, 'amount', parseFloat(event.target.value))}
                 />
             </div>
-            <div className="p-2 bg-white">
+            <div className="col-span-1 p-2 bg-white text-center">
                 <input
                     type="checkbox"
                     name={`transactions[${index}].paid`}
                     className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
                     checked={transaction.paid}
-                    onChange={event => onChange(index, 'paid', event.target.checked)}
+                    onChange={event => onChange?.(index, 'paid', event.target.checked)}
                 />
             </div>
-            <div className="p-2 bg-white">
+            <div className="col-span-3 p-2 bg-white text-center">
                 <input
                     type="text"
                     name={`transactions[${index}].description`}
                     className="w-60 border rounded px-3 py-1"
                     value={transaction.description}
-                    onChange={event => onChange(index, 'description', event.target.value)}
+                    onChange={event => onChange?.(index, 'description', event.target.value)}
                 />
             </div>
-            <div className="p-2 bg-white">
+            <div className="col-span-1 p-2 bg-white text-center">
                 <button className="text-red-600 hover:text-red-800">Remove</button>
             </div>
         </>
