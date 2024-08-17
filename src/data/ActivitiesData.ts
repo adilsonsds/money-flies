@@ -104,3 +104,9 @@ export const toggleTransactionPaidValue = (financialActivityId: string, transact
     });
     updateActivity(activity);
 }
+
+export const getAllCategories = () => {
+    const transactions = getTransactions();
+    const categories = transactions.map(transaction => transaction.category);
+    return Array.from(new Set(categories));
+}

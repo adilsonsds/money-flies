@@ -1,32 +1,9 @@
-import { Link } from 'react-router-dom'
 import './App.css'
-import { getFilterURL, getTotalValue } from './utils/TransactionUtils';
 import { useEffect, useState } from 'react';
 import { faker } from '@faker-js/faker';
 import { createActivities, getTransactions, removeAllActivities } from './data/ActivitiesData';
-import { FinancialActivityCreate, TransactionItemList } from './types/Activity';
-
-type Period = {
-  startDate: Date;
-  endDate: Date;
-}
-
-function MetricsColumns({ totalValue, periodsCount, urlParams }: { totalValue: number; periodsCount: number; urlParams: string }) {
-  return (
-    <>
-      <td className="p-2 text-right dark:text-white">
-        <Link to={`/payments/list?${urlParams}`} className="dark:text-blue-300">
-          {totalValue.toFixed(2)}
-        </Link>
-      </td>
-      <td className="p-2 text-right dark:text-white">
-        <Link to={`/payments/list?${urlParams}`} className="dark:text-blue-300">
-          {(totalValue / periodsCount).toFixed(2)}
-        </Link>
-      </td>
-    </>
-  )
-}
+import { FinancialActivityCreate, Period, TransactionItemList } from './types/Activity';
+import { SummaryTable, SummaryTableCategory, SummaryTableHeader, SummaryTableTotal } from './components/SummaryTable';
 
 function App() {
   const [periods, setPeriods] = useState<Period[]>([]);
@@ -120,62 +97,25 @@ function App() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold p-4">Summary</h1>
+      <h1 className="text-3xl font-bold py-4">Summary</h1>
       <div className="overflow-x-auto">
-
-        <table className="min-w-full bg-white dark:bg-gray-700 shadow-md rounded-lg overflow-hidden">
-          <thead className="bg-gray-200 dark:bg-gray-500">
-            <tr>
-              <th className="w-36 p-4 text-center dark:text-white">#</th>
-              {periods.map((period, index) => (
-                <th key={index} className="w-72 p-4 text-center dark:text-white">
-                  {period.startDate.toLocaleString('pt-BR', { month: 'short' })} {period.startDate.toLocaleString('default', { year: "2-digit" })}
-                </th>
-              ))}
-              <th className="w-36 p-4 text-center dark:text-white">Total</th>
-              <th className="w-36 p-4 text-center dark:text-white">Average</th>
-            </tr>
-          </thead>
-          <tbody>
-            {categories.map((category, index) => (
-              <tr key={index} className="border-b hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-600">
-                <td className="p-2 text-left dark:text-white">{category}</td>
-                {periods.map((period, index) => {
-                  const totalValue = getTotalValue(transactions, { startDate: period.startDate, endDate: period.endDate, category: category });
-                  return (
-                    <td key={index} className="p-2 text-right dark:text-white">
-                      <Link to={`/transactions/list?${getFilterURL({ startDate: period.startDate, endDate: period.endDate, category })}`} className="dark:text-blue-300">
-                        {totalValue.toFixed(2)}
-                      </Link>
-                    </td>
-                  );
-                })}
-                <MetricsColumns
-                  totalValue={getTotalValue(transactions, { category })}
-                  periodsCount={periods.length}
-                  urlParams={getFilterURL({ category })}
-                />
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td className="p-2 text-left dark:text-white">Total</td>
-              {periods.map((period, index) => {
-                const totalValue = getTotalValue(transactions, { startDate: period.startDate, endDate: period.endDate });
-                return (
-                  <td key={index} className="p-2 text-right dark:text-white">
-                    <Link to={`/transactions/list?${getFilterURL({ startDate: period.startDate, endDate: period.endDate })}`} className="dark:text-blue-300">
-                      {totalValue.toFixed(2)}
-                    </Link>
-                  </td>
-                );
-              })}
-              <td></td>
-              <td></td>
-            </tr>
-          </tfoot>
-        </table>
+        <SummaryTable>
+          <SummaryTableHeader
+            periods={periods}
+          />
+          {categories.map((category, index) => (
+            <SummaryTableCategory
+              key={index}
+              category={category}
+              periods={periods}
+              transactions={transactions}
+            />
+          ))}
+          <SummaryTableTotal
+            periods={periods}
+            transactions={transactions}
+          />
+        </SummaryTable>
       </div>
       <button className="mt-20 text-blue-500" onClick={readDataFromJSON}>
         Import data from JSON

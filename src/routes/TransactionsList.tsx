@@ -18,11 +18,6 @@ export default function TransactionsList() {
         setIsLoading(false);
     };
 
-    function handleTransactionStatusChange(transaction: TransactionItemList) {
-        transaction.paid = !transaction.paid;
-        toggleTransactionPaidValue(transaction.financialActivityId, transaction.id);
-    }
-
     useEffect(() => {
         console.log('PaymentsList rendered');
         fetchTransactions();
@@ -38,37 +33,18 @@ export default function TransactionsList() {
             {
                 transactions.length > 0 ? (
                     <div className="overflow-x-auto">
-                        <table className="min-w-full bg-white dark:bg-gray-700 shadow-md rounded-lg overflow-hidden">
-                            <thead className="bg-gray-200 dark:bg-gray-500">
-                                <tr>
-                                    <th className="w-36 p-4 text-center dark:text-white">Date</th>
-                                    <th className="w-48 p-4 text-center dark:text-white">Category</th>
-                                    <th className="w-24 p-4 text-center dark:text-white">Amount</th>
-                                    <th className="w-24 p-4 text-center dark:text-white">Paid</th>
-                                    <th className="w-60 p-4 text-center dark:text-white">Description</th>
-                                    <th className="w-24 p-4 text-center dark:text-white">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {transactions.map(transaction => (
-                                    <tr key={transaction.id} className="border-b hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-600">
-                                        <td className="p-4 text-center dark:text-white">{transaction.date}</td>
-                                        <td className="p-4 text-center dark:text-white">{transaction.category}</td>
-                                        <td className="p-4 text-center dark:text-white">{transaction.amount}</td>
-                                        <td className="p-4 text-center">
-                                            <Checkbox
-                                                checked={transaction.paid}
-                                                onChange={() => handleTransactionStatusChange(transaction)}
-                                            />
-                                        </td>
-                                        <td className="p-4 text-center dark:text-white">{transaction.description}</td>
-                                        <td className="p-4 text-center">
-                                            <Link to={`/activities/edit/${transaction.financialActivityId}`} className="text-blue-500 dark:text-blue-300 hover:underline">View</Link>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                        <div className="grid grid-cols-7 gap-px bg-gray-400">
+                            <div className="p-2 bg-white">#</div>
+                            <div className="p-2 bg-white">Date</div>
+                            <div className="p-2 bg-white">Category</div>
+                            <div className="p-2 bg-white">Amount</div>
+                            <div className="p-2 bg-white">Paid</div>
+                            <div className="p-2 bg-white">Description</div>
+                            <div className="p-2 bg-white">Actions</div>
+                            {transactions.map((transaction, index) => (
+                                <TableRow key={index} transaction={transaction} index={index} />
+                            ))}
+                        </div>
                     </div>
                 ) : (
                     <p className="text-center text-gray-500 dark:text-gray-400">No payments found.</p>
@@ -85,5 +61,37 @@ export default function TransactionsList() {
                 </Link>
             </div>
         </div>
+    )
+}
+
+type TableRowProps = {
+    transaction: TransactionItemList;
+    index: number;
+}
+
+const TableRow = ({ transaction, index }: TableRowProps) => {
+
+    function handleTransactionStatusChange(transaction: TransactionItemList) {
+        transaction.paid = !transaction.paid;
+        toggleTransactionPaidValue(transaction.financialActivityId, transaction.id);
+    }
+
+    return (
+        <>
+            <div key={index} className="p-2 bg-white">{index + 1}</div>
+            <div className="p-2 bg-white">{transaction.date}</div>
+            <div className="p-2 bg-white">{transaction.category}</div>
+            <div className="p-2 bg-white">{transaction.amount}</div>
+            <div className="p-2 bg-white">
+                <Checkbox
+                    checked={transaction.paid}
+                    onChange={() => handleTransactionStatusChange(transaction)}
+                />
+            </div>
+            <div className="p-2 bg-white">{transaction.description}</div>
+            <div className="p-2 bg-white">
+                <Link to={`/activities/edit/${transaction.financialActivityId}`} className="text-blue-500 dark:text-blue-300 hover:underline">View</Link>
+            </div>
+        </>
     )
 }

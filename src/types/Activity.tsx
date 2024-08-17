@@ -35,3 +35,13 @@ export type TransactionsFilter = {
     endDate?: Date | null;
     category?: string | null;
 }
+
+export type Period = {
+    startDate: Date;
+    endDate: Date;
+}
+
+export type Category = {
+    value: string;
+    label: string;
+}
