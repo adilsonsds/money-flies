@@ -1,10 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import { getFilterObjectFromUrl } from "../utils/TransactionUtils";
 import { useEffect, useState } from "react";
-import { Checkbox } from "../components/Checkbox";
 import PageTitle from "../components/PageTitle";
 import { TransactionItemList } from "../types/Activity";
-import { getTransactions, toggleTransactionPaidValue } from "../data/ActivitiesData";
+import { getTransactions } from "../data/ActivitiesData";
 import { TransactionsTable } from "../components/TransactionsTable";
 
 export default function TransactionsList() {
@@ -52,37 +51,5 @@ export default function TransactionsList() {
                 </Link>
             </div>
         </div>
-    )
-}
-
-type TableRowProps = {
-    transaction: TransactionItemList;
-    index: number;
-}
-
-const TableRow = ({ transaction, index }: TableRowProps) => {
-
-    function handleTransactionStatusChange(transaction: TransactionItemList) {
-        transaction.paid = !transaction.paid;
-        toggleTransactionPaidValue(transaction.financialActivityId, transaction.id);
-    }
-
-    return (
-        <>
-            <div key={index} className="p-2 bg-white">{index + 1}</div>
-            <div className="p-2 bg-white">{transaction.date}</div>
-            <div className="p-2 bg-white">{transaction.category}</div>
-            <div className="p-2 bg-white">{transaction.amount}</div>
-            <div className="p-2 bg-white">
-                <Checkbox
-                    checked={transaction.paid}
-                    onChange={() => handleTransactionStatusChange(transaction)}
-                />
-            </div>
-            <div className="p-2 bg-white">{transaction.description}</div>
-            <div className="p-2 bg-white">
-                <Link to={`/activities/edit/${transaction.financialActivityId}`} className="text-blue-500 dark:text-blue-300 hover:underline">View</Link>
-            </div>
-        </>
     )
 }
