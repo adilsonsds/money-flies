@@ -1,21 +1,24 @@
-import { useNavigate } from "react-router-dom";
-import { FinancialActivityCreate, FinancialTransactionCreate } from "../types/Activity";
-import { createActivities } from "../data/ActivitiesData";
+import { useNavigate, useParams } from "react-router-dom";
+import { FinancialActivity, FinancialTransaction } from "../types/Activity";
+import { getActivity, updateActivity } from "../data/ActivitiesData";
 import PageTitle from "../components/PageTitle";
 import { useEffect, useState } from "react";
 
-export default function ActivitiesNew() {
+export default function ActivitiesEdit() {
+    const { id } = useParams();
     const navigate = useNavigate();
 
     const [title, setTitle] = useState('');
-    const [transactions, setTransactions] = useState<FinancialTransactionCreate[]>([]);
+    const [transactions, setTransactions] = useState<FinancialTransaction[]>([]);
 
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        const activity: FinancialActivityCreate = {
+        const activity: FinancialActivity = {
+            id: id as string,
             title: title,
             transactions: transactions.map(transaction => ({
+                id: transaction.id,
                 date: transaction.date,
                 category: transaction.category,
                 amount: transaction.amount,
@@ -27,7 +30,7 @@ export default function ActivitiesNew() {
         console.log('Creating activity', activity);
 
         try {
-            createActivities([activity]);
+            updateActivity(activity);
             navigate(-1);
         }
         catch (error) {
@@ -46,21 +49,21 @@ export default function ActivitiesNew() {
         }));
     }
 
+    function handleActivityLoad() {
+        const activity = getActivity(id as string);
+        if (!activity) return;
+        setTitle(activity.title);
+        setTransactions(activity.transactions);
+    }
+
     useEffect(() => {
-        setTransactions([
-            {
-                date: new Date().toISOString().split('T')[0],
-                category: '',
-                amount: 0,
-                paid: true,
-                description: ''
-            }
-        ]);
+        if (!id) return;
+        handleActivityLoad();
     }, []);
 
     return (
         <>
-            <PageTitle title="New activity" />
+            <PageTitle title="Edit activity" />
             <form method="post" className="space-y-4 mt-4" onSubmit={handleSubmit}>
                 <div>
                     <label htmlFor="activityTitle" className="block">Title</label>

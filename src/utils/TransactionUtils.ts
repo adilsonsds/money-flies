@@ -1,19 +1,18 @@
-import { TransactionsFilter } from "../types/Activity";
-import type { PaymentsFilter, PaymentsList } from "../types/Payment";
+import { TransactionItemList, TransactionsFilter } from "../types/Activity";
 
-export function getFilteredPayments(payments: PaymentsList, filter: PaymentsFilter): PaymentsList {
-    return payments.filter(payment =>
-        (!filter.startDate || new Date(payment.date) >= new Date(filter.startDate)) &&
-        (!filter.endDate || new Date(payment.date) <= new Date(filter.endDate)) &&
-        (!filter.category || payment.category === filter.category)
+export function getFilteredTransactions(transactions: TransactionItemList[], filter: TransactionsFilter): TransactionItemList[] {
+    return transactions.filter(transaction =>
+        (!filter.startDate || new Date(transaction.date) >= new Date(filter.startDate)) &&
+        (!filter.endDate || new Date(transaction.date) <= new Date(filter.endDate)) &&
+        (!filter.category || transaction.category === filter.category)
     );
 }
 
-export function getTotalValue(payments: PaymentsList, filter: PaymentsFilter): number {
-    return getFilteredPayments(payments, filter).reduce((acc, payment) => acc + payment.amount, 0);
+export function getTotalValue(transactions: TransactionItemList[], filter: TransactionsFilter): number {
+    return getFilteredTransactions(transactions, filter).reduce((acc, transaction) => acc + transaction.amount, 0);
 }
 
-export function getFilterURL({ startDate, endDate, category }: PaymentsFilter): string {
+export function getFilterURL({ startDate, endDate, category }: TransactionsFilter): string {
     var queryParams = new URLSearchParams();
 
     if (startDate) queryParams.set('startDate', startDate.toISOString().split('T')[0]);

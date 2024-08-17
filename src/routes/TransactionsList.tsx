@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Checkbox } from "../components/Checkbox";
 import PageTitle from "../components/PageTitle";
 import { TransactionItemList } from "../types/Activity";
-import { getTransactions } from "../data/ActivitiesData";
+import { getTransactions, toggleTransactionPaidValue } from "../data/ActivitiesData";
 
 export default function TransactionsList() {
     const location = useLocation();
@@ -14,13 +14,13 @@ export default function TransactionsList() {
     const fetchTransactions = () => {
         const filter = getFilterObjectFromUrl(location.search);
         const result = getTransactions(filter);
-        setTransactions(result.transactions);
+        setTransactions(result);
         setIsLoading(false);
     };
 
     function handleTransactionStatusChange(transaction: TransactionItemList) {
         transaction.paid = !transaction.paid;
-        //updatePayment(transaction);
+        toggleTransactionPaidValue(transaction.financialActivityId, transaction.id);
     }
 
     useEffect(() => {
@@ -63,7 +63,7 @@ export default function TransactionsList() {
                                         </td>
                                         <td className="p-4 text-center dark:text-white">{transaction.description}</td>
                                         <td className="p-4 text-center">
-                                            <Link to={`/payments/${transaction.id}`} className="text-blue-500 dark:text-blue-300 hover:underline">View</Link>
+                                            <Link to={`/activities/edit/${transaction.financialActivityId}`} className="text-blue-500 dark:text-blue-300 hover:underline">View</Link>
                                         </td>
                                     </tr>
                                 ))}

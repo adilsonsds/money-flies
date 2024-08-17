@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom'
 import './App.css'
 import { getFilterURL, getTotalValue } from './utils/TransactionUtils';
 import { useEffect, useState } from 'react';
-import { Payment, PaymentCreate } from './types/Payment';
-import { createPayments, getPayments, removeAllPayments } from './data/PaymentsData';
 import { faker } from '@faker-js/faker';
+import { createActivities, getTransactions, removeAllActivities } from './data/ActivitiesData';
+import { FinancialActivityCreate, TransactionItemList } from './types/Activity';
 
 type Period = {
   startDate: Date;
@@ -30,11 +30,11 @@ function MetricsColumns({ totalValue, periodsCount, urlParams }: { totalValue: n
 
 function App() {
   const [periods, setPeriods] = useState<Period[]>([]);
-  const [payments, setPayments] = useState<Payment[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [transactions, setTransactions] = useState<TransactionItemList[]>([]);
 
-  async function handlePayments() {
-    const payments = await getPayments();
+  function handleTransactions() {
+    const transactions = getTransactions();
     const year = new Date().getFullYear();
     const months = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
@@ -44,74 +44,78 @@ function App() {
       return { startDate, endDate };
     });
 
-    setPayments(payments);
+    setTransactions(transactions);
     setPeriods(periods);
-    setCategories([...new Set(payments.map(summary => summary.category))]);
+    setCategories([...new Set(transactions.map(transaction => transaction.category))]);
   }
 
-  async function createFakeData() {
-    const fakePayments: PaymentCreate[] = Array.from({ length: 5 }, (_) => ({
-      date: faker.date.between({ from: '2024-01-01', to: '2024-12-31' }).toISOString().split('T')[0],
-      category: faker.helpers.arrayElement(['Food', 'Rent', 'Transport', 'Health', 'Education', 'Entertainment', 'Others', 'Salary', 'Investment', 'Gift']),
-      amount: parseFloat(faker.finance.amount({ min: 1, max: 1000, dec: 2 })),
-      paid: faker.datatype.boolean(),
-      description: faker.lorem.words({ min: 1, max: 4 })
+  function createFakeData() {
+
+    const fakeActivities: FinancialActivityCreate[] = Array.from({ length: 5 }, (_) => ({
+      title: faker.lorem.words({ min: 1, max: 4 }),
+      transactions: Array.from({ length: 5 }, (_) => ({
+        date: faker.date.between({ from: '2024-01-01', to: '2024-12-31' }).toISOString().split('T')[0],
+        category: faker.helpers.arrayElement(['Food', 'Rent', 'Transport', 'Health', 'Education', 'Entertainment', 'Others', 'Salary', 'Investment', 'Gift']),
+        amount: parseFloat(faker.finance.amount({ min: 1, max: 1000, dec: 2 })),
+        paid: faker.datatype.boolean(),
+        description: faker.lorem.words({ min: 1, max: 4 })
+      }))
     }));
 
-    createPayments(fakePayments);
-    handlePayments();
+    createActivities(fakeActivities);
+    handleTransactions();
   }
 
   async function clearData(): Promise<void> {
-    removeAllPayments();
-    handlePayments();
+    removeAllActivities();
+    handleTransactions();
   }
 
-  function exportDataToCSV() {
-    const csv = `Date,Category,Amount,Paid,Description\n` + payments.map(payment => {
-      return `${payment.date},${payment.category},${payment.amount},${payment.paid},${payment.description}`;
-    }).join('\n');
+  function exportDataToJSON() {
+    // const csv = `Date,Category,Amount,Paid,Description\n` + payments.map(payment => {
+    //   return `${payment.date},${payment.category},${payment.amount},${payment.paid},${payment.description}`;
+    // }).join('\n');
 
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('hidden', '');
-    a.setAttribute('href', url);
-    a.setAttribute('download', 'payments.csv');
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    // const blob = new Blob([csv], { type: 'text/csv' });
+    // const url = window.URL.createObjectURL(blob);
+    // const a = document.createElement('a');
+    // a.setAttribute('hidden', '');
+    // a.setAttribute('href', url);
+    // a.setAttribute('download', 'payments.csv');
+    // document.body.appendChild(a);
+    // a.click();
+    // document.body.removeChild(a);
   }
 
-  function readDataFromCSV() {
-    const input = document.createElement('input');
-    input.setAttribute('type', 'file');
-    input.setAttribute('accept', '.csv');
-    input.addEventListener('change', async () => {
-      const file = input.files?.item(0);
-      if (file) {
-        const text = await file.text();
-        const lines = text.split('\n');
-        const payments = lines.slice(1).map(line => {
-          const [date, category, amount, paid, description] = line.split(',');
-          return {
-            date,
-            category,
-            amount: parseFloat(amount),
-            paid: paid.toLowerCase() === 'true',
-            description
-          };
-        });
-        removeAllPayments();
-        createPayments(payments);
-        handlePayments();
-      }
-    });
-    input.click();
+  function readDataFromJSON() {
+    // const input = document.createElement('input');
+    // input.setAttribute('type', 'file');
+    // input.setAttribute('accept', '.csv');
+    // input.addEventListener('change', async () => {
+    //   const file = input.files?.item(0);
+    //   if (file) {
+    //     const text = await file.text();
+    //     const lines = text.split('\n');
+    //     const payments = lines.slice(1).map(line => {
+    //       const [date, category, amount, paid, description] = line.split(',');
+    //       return {
+    //         date,
+    //         category,
+    //         amount: parseFloat(amount),
+    //         paid: paid.toLowerCase() === 'true',
+    //         description
+    //       };
+    //     });
+    //     removeAllPayments();
+    //     createPayments(payments);
+    //     // handlePayments();
+    //   }
+    // });
+    // input.click();
   }
 
   useEffect(() => {
-    handlePayments();
+    handleTransactions();
   }, []);
 
   return (
@@ -137,7 +141,7 @@ function App() {
               <tr key={index} className="border-b hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-600">
                 <td className="p-2 text-left dark:text-white">{category}</td>
                 {periods.map((period, index) => {
-                  const totalValue = getTotalValue(payments, { startDate: period.startDate, endDate: period.endDate, category: category });
+                  const totalValue = getTotalValue(transactions, { startDate: period.startDate, endDate: period.endDate, category: category });
                   return (
                     <td key={index} className="p-2 text-right dark:text-white">
                       <Link to={`/transactions/list?${getFilterURL({ startDate: period.startDate, endDate: period.endDate, category })}`} className="dark:text-blue-300">
@@ -147,7 +151,7 @@ function App() {
                   );
                 })}
                 <MetricsColumns
-                  totalValue={getTotalValue(payments, { category })}
+                  totalValue={getTotalValue(transactions, { category })}
                   periodsCount={periods.length}
                   urlParams={getFilterURL({ category })}
                 />
@@ -158,7 +162,7 @@ function App() {
             <tr>
               <td className="p-2 text-left dark:text-white">Total</td>
               {periods.map((period, index) => {
-                const totalValue = getTotalValue(payments, { startDate: period.startDate, endDate: period.endDate });
+                const totalValue = getTotalValue(transactions, { startDate: period.startDate, endDate: period.endDate });
                 return (
                   <td key={index} className="p-2 text-right dark:text-white">
                     <Link to={`/transactions/list?${getFilterURL({ startDate: period.startDate, endDate: period.endDate })}`} className="dark:text-blue-300">
@@ -173,11 +177,11 @@ function App() {
           </tfoot>
         </table>
       </div>
-      <button className="mt-20 text-blue-500" onClick={readDataFromCSV}>
-        Import data from CSV
+      <button className="mt-20 text-blue-500" onClick={readDataFromJSON}>
+        Import data from JSON
       </button>
-      <button className="mt-20 ml-4 text-blue-500" onClick={exportDataToCSV}>
-        Export data to CSV
+      <button className="mt-20 ml-4 text-blue-500" onClick={exportDataToJSON}>
+        Export data to JSON
       </button>
       <button className="mt-20 ml-4 text-blue-500" onClick={createFakeData}>
         Add fake payments to test

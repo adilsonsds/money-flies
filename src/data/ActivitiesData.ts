@@ -1,4 +1,4 @@
-import { FinancialActivity, FinancialActivityCreate, TransactionsFilter, TransactionsResult } from "../types/Activity";
+import { FinancialActivity, FinancialActivityCreate, TransactionItemList, TransactionsFilter } from "../types/Activity";
 
 const LOCALSTORAGE_NAME = 'activities';
 
@@ -24,11 +24,11 @@ export const createActivities = (createActivities: FinancialActivityCreate[]) =>
     createActivities.forEach(createActivity => {
         const activity: FinancialActivity = {
             id: (++newId).toString(),
-            description: createActivity.description,
-            category: createActivity.category,
+            title: createActivity.title,
             transactions: createActivity.transactions.map((createTransaction, index) => ({
                 id: index.toString(),
                 date: createTransaction.date,
+                category: createTransaction.category,
                 amount: createTransaction.amount,
                 paid: createTransaction.paid,
                 description: createTransaction.description
@@ -41,41 +41,66 @@ export const createActivities = (createActivities: FinancialActivityCreate[]) =>
     saveActivities(activities);
 }
 
-export const getTransactions = (filter?: TransactionsFilter): TransactionsResult => {
-    const result: TransactionsResult = {
-        transactions: [],
-        total: 0
-    };
+export const updateActivity = (activity: FinancialActivity) => {
+    const activities = getAllActivities();
+    const index = activities.findIndex(a => a.id === activity.id);
+    activities[index] = activity;
+    saveActivities(activities);
+}
+
+export const getTransactions = (filter?: TransactionsFilter): TransactionItemList[] => {
+    let transactions: TransactionItemList[] = [];
 
     const activities = getAllActivities();
 
     activities.forEach(activity => {
         activity.transactions.forEach(transaction => {
-            result.transactions.push({
+            transactions.push({
                 id: transaction.id,
                 date: transaction.date,
                 amount: transaction.amount,
                 paid: transaction.paid,
                 description: transaction.description,
-                category: activity.category,
+                category: transaction.category,
                 financialActivityId: activity.id
             });
         });
     });
 
     if (filter) {
-        result.transactions = result.transactions.filter(transaction => (
+        transactions = transactions.filter(transaction => (
             (!filter.category || transaction.category === filter.category) &&
             (!filter.startDate || transaction.date >= filter.startDate.toISOString()) &&
             (!filter.endDate || transaction.date <= filter.endDate.toISOString())
         ));
     }
 
-    result.transactions.sort((a, b) => {
+    transactions.sort((a, b) => {
         if (a.date < b.date) return -1;
         if (a.date > b.date) return 1;
         return 0;
     });
 
-    return result;
+    return transactions;
+}
+
+export const getActivity = (id: string): FinancialActivity | undefined => {
+    const activities = getAllActivities();
+    return activities.find(activity => activity.id === id);
+}
+
+export const removeAllActivities = () => {
+    localStorage.removeItem(LOCALSTORAGE_NAME);
+}
+
+export const toggleTransactionPaidValue = (financialActivityId: string, transactionId: string) => {
+    const activity = getActivity(financialActivityId);
+    if (!activity) return;
+    activity.transactions = activity.transactions.map(transaction => {
+        if (transaction.id === transactionId) {
+            transaction.paid = !transaction.paid;
+        }
+        return transaction;
+    });
+    updateActivity(activity);
 }

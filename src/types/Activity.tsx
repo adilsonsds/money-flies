@@ -1,12 +1,12 @@
 export type FinancialActivity = {
     id: string;
-    description: string;
-    category: string;
+    title: string;
     transactions: FinancialTransaction[];
 };
 
 export type FinancialTransaction = {
     id: string;
+    category: string;
     date: string;
     amount: number;
     paid: boolean;
@@ -16,8 +16,7 @@ export type FinancialTransaction = {
 export type FinancialTransactionCreate = Omit<FinancialTransaction, 'id'>;
 
 export type FinancialActivityCreate = {
-    description: string;
-    category: string;
+    title: string;
     transactions: FinancialTransactionCreate[];
 }
 

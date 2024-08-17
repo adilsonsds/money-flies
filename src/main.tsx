@@ -8,8 +8,8 @@ import {
 import './index.css'
 import ErrorPage from './ErrorPage.tsx';
 import TransactionsList from './routes/TransactionsList.tsx';
-import PaymentsDetails from './routes/PaymentsDetails.tsx';
 import ActivitiesNew from './routes/ActivitiesNew.tsx';
+import ActivitiesEdit from './routes/ActivitiesEdit.tsx';
 
 const router = createHashRouter([
   {
@@ -22,8 +22,8 @@ const router = createHashRouter([
     element: <TransactionsList />,
   },
   {
-    path: "/payments/:id",
-    element: <PaymentsDetails />,
+    path: "/activities/edit/:id",
+    element: <ActivitiesEdit />,
   },
   {
     path: "activities/new",
