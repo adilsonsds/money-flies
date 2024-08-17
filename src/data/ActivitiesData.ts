@@ -1,4 +1,4 @@
-import { FinancialActivity, FinancialActivityCreate } from "../types/Activity";
+import { FinancialActivity, FinancialActivityCreate, TransactionsFilter, TransactionsResult } from "../types/Activity";
 
 const LOCALSTORAGE_NAME = 'activities';
 
@@ -41,15 +41,41 @@ export const createActivities = (createActivities: FinancialActivityCreate[]) =>
     saveActivities(activities);
 }
 
-export const getPaymentsFromTransactions = () => {
-    const activities = getAllActivities();
-    const payments = activities.flatMap(activity => activity.transactions.map(transaction => ({
-        date: transaction.date,
-        amount: transaction.amount,
-        paid: transaction.paid,
-        description: transaction.description,
-        category: activity.category
-    })));
+export const getTransactions = (filter?: TransactionsFilter): TransactionsResult => {
+    const result: TransactionsResult = {
+        transactions: [],
+        total: 0
+    };
 
-    return payments;
+    const activities = getAllActivities();
+
+    activities.forEach(activity => {
+        activity.transactions.forEach(transaction => {
+            result.transactions.push({
+                id: transaction.id,
+                date: transaction.date,
+                amount: transaction.amount,
+                paid: transaction.paid,
+                description: transaction.description,
+                category: activity.category,
+                financialActivityId: activity.id
+            });
+        });
+    });
+
+    if (filter) {
+        result.transactions = result.transactions.filter(transaction => (
+            (!filter.category || transaction.category === filter.category) &&
+            (!filter.startDate || transaction.date >= filter.startDate.toISOString()) &&
+            (!filter.endDate || transaction.date <= filter.endDate.toISOString())
+        ));
+    }
+
+    result.transactions.sort((a, b) => {
+        if (a.date < b.date) return -1;
+        if (a.date > b.date) return 1;
+        return 0;
+    });
+
+    return result;
 }

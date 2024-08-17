@@ -1,3 +1,4 @@
+import { TransactionsFilter } from "../types/Activity";
 import type { PaymentsFilter, PaymentsList } from "../types/Payment";
 
 export function getFilteredPayments(payments: PaymentsList, filter: PaymentsFilter): PaymentsList {
@@ -22,7 +23,7 @@ export function getFilterURL({ startDate, endDate, category }: PaymentsFilter): 
     return queryParams.toString();
 }
 
-export function getFilterObjectFromUrl(search: string): PaymentsFilter {
+export function getFilterObjectFromUrl(search: string): TransactionsFilter {
     const queryParams = new URLSearchParams(search);
     const startDate = queryParams.get('startDate');
     const endDate = queryParams.get('endDate');

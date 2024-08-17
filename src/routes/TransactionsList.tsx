@@ -1,31 +1,31 @@
 import { Link, useLocation } from "react-router-dom";
-import { getPayments, updatePayment } from "../data/PaymentsData";
-import { getFilterObjectFromUrl } from "../utils/PaymentUtils";
+import { getFilterObjectFromUrl } from "../utils/TransactionUtils";
 import { useEffect, useState } from "react";
-import { Payment } from "../types/Payment";
 import { Checkbox } from "../components/Checkbox";
 import PageTitle from "../components/PageTitle";
+import { TransactionItemList } from "../types/Activity";
+import { getTransactions } from "../data/ActivitiesData";
 
-export default function PaymentsList() {
+export default function TransactionsList() {
     const location = useLocation();
     const [isLoading, setIsLoading] = useState(true);
-    const [payments, setPayments] = useState<Payment[]>([]);
+    const [transactions, setTransactions] = useState<TransactionItemList[]>([]);
 
-    const fetchPayments = async () => {
+    const fetchTransactions = () => {
         const filter = getFilterObjectFromUrl(location.search);
-        const payments = await getPayments(filter);
-        setPayments(payments);
+        const result = getTransactions(filter);
+        setTransactions(result.transactions);
         setIsLoading(false);
     };
 
-    function handlePaymentStatusChange(payment: Payment) {
-        payment.paid = !payment.paid;
-        updatePayment(payment);
+    function handleTransactionStatusChange(transaction: TransactionItemList) {
+        transaction.paid = !transaction.paid;
+        //updatePayment(transaction);
     }
 
     useEffect(() => {
         console.log('PaymentsList rendered');
-        fetchPayments();
+        fetchTransactions();
     }, []);
 
     if (isLoading) {
@@ -34,9 +34,9 @@ export default function PaymentsList() {
 
     return (
         <div>
-            <PageTitle title="Payments" />
+            <PageTitle title="Transactions" />
             {
-                payments.length > 0 ? (
+                transactions.length > 0 ? (
                     <div className="overflow-x-auto">
                         <table className="min-w-full bg-white dark:bg-gray-700 shadow-md rounded-lg overflow-hidden">
                             <thead className="bg-gray-200 dark:bg-gray-500">
@@ -50,20 +50,20 @@ export default function PaymentsList() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {payments.map(payment => (
-                                    <tr key={payment.id} className="border-b hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-600">
-                                        <td className="p-4 text-center dark:text-white">{payment.date}</td>
-                                        <td className="p-4 text-center dark:text-white">{payment.category}</td>
-                                        <td className="p-4 text-center dark:text-white">{payment.amount}</td>
+                                {transactions.map(transaction => (
+                                    <tr key={transaction.id} className="border-b hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-600">
+                                        <td className="p-4 text-center dark:text-white">{transaction.date}</td>
+                                        <td className="p-4 text-center dark:text-white">{transaction.category}</td>
+                                        <td className="p-4 text-center dark:text-white">{transaction.amount}</td>
                                         <td className="p-4 text-center">
                                             <Checkbox
-                                                checked={payment.paid}
-                                                onChange={() => handlePaymentStatusChange(payment)}
+                                                checked={transaction.paid}
+                                                onChange={() => handleTransactionStatusChange(transaction)}
                                             />
                                         </td>
-                                        <td className="p-4 text-center dark:text-white">{payment.description}</td>
+                                        <td className="p-4 text-center dark:text-white">{transaction.description}</td>
                                         <td className="p-4 text-center">
-                                            <Link to={`/payments/${payment.id}`} className="text-blue-500 dark:text-blue-300 hover:underline">View</Link>
+                                            <Link to={`/payments/${transaction.id}`} className="text-blue-500 dark:text-blue-300 hover:underline">View</Link>
                                         </td>
                                     </tr>
                                 ))}

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import './App.css'
-import { getFilterURL, getTotalValue } from './utils/PaymentUtils';
+import { getFilterURL, getTotalValue } from './utils/TransactionUtils';
 import { useEffect, useState } from 'react';
 import { Payment, PaymentCreate } from './types/Payment';
 import { createPayments, getPayments, removeAllPayments } from './data/PaymentsData';
@@ -140,7 +140,7 @@ function App() {
                   const totalValue = getTotalValue(payments, { startDate: period.startDate, endDate: period.endDate, category: category });
                   return (
                     <td key={index} className="p-2 text-right dark:text-white">
-                      <Link to={`/payments/list?${getFilterURL({ startDate: period.startDate, endDate: period.endDate, category })}`} className="dark:text-blue-300">
+                      <Link to={`/transactions/list?${getFilterURL({ startDate: period.startDate, endDate: period.endDate, category })}`} className="dark:text-blue-300">
                         {totalValue.toFixed(2)}
                       </Link>
                     </td>
@@ -161,7 +161,7 @@ function App() {
                 const totalValue = getTotalValue(payments, { startDate: period.startDate, endDate: period.endDate });
                 return (
                   <td key={index} className="p-2 text-right dark:text-white">
-                    <Link to={`/payments/list?${getFilterURL({ startDate: period.startDate, endDate: period.endDate })}`} className="dark:text-blue-300">
+                    <Link to={`/transactions/list?${getFilterURL({ startDate: period.startDate, endDate: period.endDate })}`} className="dark:text-blue-300">
                       {totalValue.toFixed(2)}
                     </Link>
                   </td>

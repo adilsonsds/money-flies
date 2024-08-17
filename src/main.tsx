@@ -7,7 +7,7 @@ import {
 } from "react-router-dom";
 import './index.css'
 import ErrorPage from './ErrorPage.tsx';
-import PaymentsList from './routes/PaymentsList.tsx';
+import TransactionsList from './routes/TransactionsList.tsx';
 import PaymentsDetails from './routes/PaymentsDetails.tsx';
 import ActivitiesNew from './routes/ActivitiesNew.tsx';
 
@@ -18,8 +18,8 @@ const router = createHashRouter([
     errorElement: <ErrorPage />
   },
   {
-    path: "/payments/list",
-    element: <PaymentsList />,
+    path: "/transactions/list",
+    element: <TransactionsList />,
   },
   {
     path: "/payments/:id",
