@@ -2,7 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FinancialActivity, FinancialTransaction } from "../types/Activity";
 import { getActivity, updateActivity } from "../data/ActivitiesData";
 import PageTitle from "../components/PageTitle";
-import { act, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { TransactionsTable } from "../components/TransactionsTable";
 
 export default function ActivitiesEdit() {
