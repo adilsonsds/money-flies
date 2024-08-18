@@ -2,7 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FinancialActivity, FinancialTransaction } from "../types/Activity";
 import { getActivity, updateActivity } from "../data/ActivitiesData";
 import PageTitle from "../components/PageTitle";
-import { useEffect, useState } from "react";
+import { act, useEffect, useState } from "react";
 import { TransactionsTable } from "../components/TransactionsTable";
 
 export default function ActivitiesEdit() {
@@ -81,7 +81,8 @@ export default function ActivitiesEdit() {
                     <TransactionsTable
                         transactions={transactions.map((transaction) => ({
                             ...transaction,
-                            financialActivityId: id as string
+                            financialActivityId: id as string,
+                            financialTitle: title
                         }))}
                         onChange={handleTransactionChange}
                         enableEdit={true}

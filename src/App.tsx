@@ -49,46 +49,46 @@ function App() {
   }
 
   function exportDataToJSON() {
-    // const csv = `Date,Category,Amount,Paid,Description\n` + payments.map(payment => {
-    //   return `${payment.date},${payment.category},${payment.amount},${payment.paid},${payment.description}`;
-    // }).join('\n');
-
-    // const blob = new Blob([csv], { type: 'text/csv' });
-    // const url = window.URL.createObjectURL(blob);
-    // const a = document.createElement('a');
-    // a.setAttribute('hidden', '');
-    // a.setAttribute('href', url);
-    // a.setAttribute('download', 'payments.csv');
-    // document.body.appendChild(a);
-    // a.click();
-    // document.body.removeChild(a);
+    const data = JSON.stringify(transactions, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'data.json';
+    a.click();
+    document.body.removeChild(a);
   }
 
   function readDataFromJSON() {
-    // const input = document.createElement('input');
-    // input.setAttribute('type', 'file');
-    // input.setAttribute('accept', '.csv');
-    // input.addEventListener('change', async () => {
-    //   const file = input.files?.item(0);
-    //   if (file) {
-    //     const text = await file.text();
-    //     const lines = text.split('\n');
-    //     const payments = lines.slice(1).map(line => {
-    //       const [date, category, amount, paid, description] = line.split(',');
-    //       return {
-    //         date,
-    //         category,
-    //         amount: parseFloat(amount),
-    //         paid: paid.toLowerCase() === 'true',
-    //         description
-    //       };
-    //     });
-    //     removeAllPayments();
-    //     createPayments(payments);
-    //     // handlePayments();
-    //   }
-    // });
-    // input.click();
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.onchange = async (event) => {
+      const target = event.target as HTMLInputElement;
+      const file = target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const text = e.target?.result as string;
+          const data = JSON.parse(text) as TransactionItemList[];
+
+          const activities: FinancialActivityCreate[] = [];
+          data.forEach(transaction => {
+            const activity = activities.find(activity => activity.title === transaction.financialTitle);
+            if (activity) {
+              activity.transactions.push(transaction);
+            } else {
+              activities.push({ title: transaction.financialTitle, transactions: [transaction] });
+            }
+          });
+
+          createActivities(activities);
+          handleTransactions();
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
   }
 
   useEffect(() => {

@@ -27,6 +27,7 @@ export type TransactionsResult = {
 
 export type TransactionItemList = FinancialTransaction & {
     category: string;
+    financialTitle: string;
     financialActivityId: string;
 }
 

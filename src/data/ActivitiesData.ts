@@ -62,7 +62,8 @@ export const getTransactions = (filter?: TransactionsFilter): TransactionItemLis
                 paid: transaction.paid,
                 description: transaction.description,
                 category: transaction.category,
-                financialActivityId: activity.id
+                financialActivityId: activity.id,
+                financialTitle: activity.title
             });
         });
     });

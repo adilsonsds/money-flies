@@ -83,7 +83,8 @@ export default function ActivitiesNew() {
                         transactions={transactions.map((transaction) => ({
                             ...transaction,
                             id: '',
-                            financialActivityId: ''
+                            financialActivityId: '',
+                            financialTitle: ''
                         }))}
                         onChange={handleTransactionChange}
                         enableEdit={true}
