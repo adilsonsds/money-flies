@@ -47,6 +47,35 @@ export default function ActivitiesNew() {
         }));
     }
 
+    function handleTransactionDelete(index: number) {
+        setTransactions(transactions.filter((_, i) => i !== index));
+    }
+
+    function handleAddTransaction() {
+        const lastTransaction = transactions[transactions.length - 1];
+        if (lastTransaction)
+            setTransactions([
+                ...transactions,
+                {
+                    date: lastTransaction.date,
+                    category: lastTransaction.category,
+                    amount: lastTransaction.amount,
+                    paid: lastTransaction.paid,
+                    description: lastTransaction.description
+                }
+            ]);
+        else
+            setTransactions([
+                {
+                    date: new Date().toISOString().split('T')[0],
+                    category: '',
+                    amount: 0,
+                    paid: true,
+                    description: ''
+                }
+            ]);
+    }
+
     function handleOnLoad() {
         setTransactions([
             {
@@ -88,9 +117,17 @@ export default function ActivitiesNew() {
                         }))}
                         onChange={handleTransactionChange}
                         enableEdit={true}
+                        onDelete={handleTransactionDelete}
                     />
                 </div>
-                <div>
+                <div className="flex justify-between">
+                    <button
+                        type="button"
+                        className="bg-blue-500 text-white px-4 py-2 rounded"
+                        onClick={handleAddTransaction}
+                    >
+                        Add transaction
+                    </button>
                     <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">Save</button>
                 </div>
             </form >

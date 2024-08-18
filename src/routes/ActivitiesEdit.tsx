@@ -50,6 +50,10 @@ export default function ActivitiesEdit() {
         }));
     }
 
+    function handleTransactionDelete(index: number) {
+        setTransactions(transactions.filter((_, i) => i !== index));
+    }
+
     function handleActivityLoad() {
         const activity = getActivity(id as string);
         if (!activity) return;
@@ -86,6 +90,7 @@ export default function ActivitiesEdit() {
                         }))}
                         onChange={handleTransactionChange}
                         enableEdit={true}
+                        onDelete={handleTransactionDelete}
                     />
                 </div>
                 <div>

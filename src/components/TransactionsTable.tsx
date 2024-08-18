@@ -7,9 +7,10 @@ type TransactionsTableProps = {
     transactions: TransactionItemList[];
     onChange?: (index: number, key: string, value: string | number | boolean) => void;
     enableEdit: boolean;
+    onDelete?: (index: number) => void;
 }
 
-export const TransactionsTable = ({ transactions, onChange, enableEdit }: TransactionsTableProps) => {
+export const TransactionsTable = ({ transactions, onChange, enableEdit, onDelete }: TransactionsTableProps) => {
     const [categoriesOptions, setCategoriesOptions] = useState<Category[]>([]);
 
     useEffect(() => {
@@ -40,6 +41,7 @@ export const TransactionsTable = ({ transactions, onChange, enableEdit }: Transa
                         categoriesOptions={categoriesOptions}
                         enableEdit={enableEdit}
                         financialActivityId={transaction.financialActivityId}
+                        onDelete={onDelete}
                     />
                 ))}
             </div>
@@ -54,9 +56,12 @@ type TableRowProps = {
     categoriesOptions: Category[];
     enableEdit: boolean;
     financialActivityId?: string;
+    onDelete?: (index: number) => void;
 }
 
-export const TableRow = ({ index, transaction, onChange, categoriesOptions, enableEdit, financialActivityId }: TableRowProps) => {
+export const TableRow = ({ index, transaction, onChange, categoriesOptions, enableEdit, financialActivityId, onDelete }: TableRowProps) => {
+    const [isNewCategory, setIsNewCategory] = useState(false);
+
     if (!enableEdit) {
         return (
             <>
@@ -85,17 +90,48 @@ export const TableRow = ({ index, transaction, onChange, categoriesOptions, enab
                 />
             </div>
             <div className="col-span-2 p-2 bg-white text-center">
-                <select
-                    name={`transactions[${index}].category`}
-                    className="w-36 border rounded px-3 py-1"
-                    value={transaction.category}
-                    onChange={event => onChange?.(index, 'category', event.target.value)}
-                >
-                    <option value="">Select category</option>
-                    {categoriesOptions.map(option => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                </select>
+                {
+                    isNewCategory ? (
+                        <>
+                            <input
+                                type="text"
+                                name={`transactions[${index}].category`}
+                                className="w-36 border rounded px-3 py-1"
+                                value={transaction.category}
+                                onChange={event => onChange?.(index, 'category', event.target.value)}
+                            />
+                            <button
+                                type="button"
+                                className="text-blue-500 hover:text-blue-800"
+                                onClick={() => setIsNewCategory(false)}
+                            >
+                                Cancel
+                            </button>
+                        </>
+                    )
+                        : (
+                            <>
+                                <select
+                                    name={`transactions[${index}].category`}
+                                    className="w-36 border rounded px-3 py-1"
+                                    value={transaction.category}
+                                    onChange={event => onChange?.(index, 'category', event.target.value)}
+                                >
+                                    <option value="">Select category</option>
+                                    {categoriesOptions.map(option => (
+                                        <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                </select>
+                                <button
+                                    type="button"
+                                    className="text-blue-500 hover:text-blue-800 ml-3"
+                                    onClick={() => setIsNewCategory(true)}
+                                >
+                                    +
+                                </button>
+                            </>
+                        )
+                }
             </div>
             <div className="col-span-2 p-2 bg-white text-center">
                 <input
@@ -125,7 +161,13 @@ export const TableRow = ({ index, transaction, onChange, categoriesOptions, enab
                 />
             </div>
             <div className="col-span-1 p-2 bg-white text-center">
-                <button className="text-red-600 hover:text-red-800">Remove</button>
+                <button
+                    type="button"
+                    className="text-blue-500 hover:text-blue-800"
+                    onClick={() => onDelete?.(index)}
+                >
+                    Delete
+                </button>
             </div>
         </>
     );

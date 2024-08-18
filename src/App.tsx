@@ -4,6 +4,7 @@ import { faker } from '@faker-js/faker';
 import { createActivities, getTransactions, removeAllActivities } from './data/ActivitiesData';
 import { FinancialActivityCreate, Period, TransactionItemList } from './types/Activity';
 import { SummaryTable, SummaryTableCategory, SummaryTableHeader, SummaryTableTotal } from './components/SummaryTable';
+import { Link } from 'react-router-dom';
 
 function App() {
   const [periods, setPeriods] = useState<Period[]>([]);
@@ -98,7 +99,10 @@ function App() {
   return (
     <div>
       <h1 className="text-3xl font-bold py-4">Summary</h1>
-      <div className="overflow-x-auto">
+      <div className="flex justify-end">
+        <Link to="/activities/new" className="bg-blue-500 text-white px-4 p-2 rounded">New activity</Link>
+      </div>
+      <div className="overflow-x-auto mt-3">
         <SummaryTable>
           <SummaryTableHeader
             periods={periods}
