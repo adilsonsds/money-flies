@@ -1,6 +1,6 @@
 import './App.css'
 import { useEffect, useState } from 'react';
-import { faker, tr } from '@faker-js/faker';
+import { faker } from '@faker-js/faker';
 import { createActivities, getTransactions, removeAllActivities } from './data/ActivitiesData';
 import { FinancialActivityCreate, Period, TransactionItemList } from './types/Activity';
 import { SummaryTable, SummaryTableCategory, SummaryTableHeader, SummaryTableTotal } from './components/SummaryTable';
