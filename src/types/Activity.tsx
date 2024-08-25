@@ -25,8 +25,13 @@ export type TransactionsResult = {
     total: number;
 }
 
-export type TransactionItemList = FinancialTransaction & {
+export type TransactionItemList = {
+    id: string;
     category: string;
+    date: Date;
+    amount: number;
+    paid: boolean;
+    description: string;
     financialTitle: string;
     financialActivityId: string;
 }

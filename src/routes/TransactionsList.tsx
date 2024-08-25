@@ -76,7 +76,7 @@ const TableRow = ({ index, transaction }: TableRowProps) => {
     return (
         <>
             <div className="col-span-1 p-2 bg-white text-center">{index + 1}</div>
-            <div className="col-span-2 p-2 bg-white text-center">{transaction.date}</div>
+            <div className="col-span-2 p-2 bg-white text-center">{transaction.date.toLocaleDateString()}</div>
             <div className="col-span-2 p-2 bg-white text-center">{transaction.category}</div>
             <div className="col-span-2 p-2 bg-white text-center align-middle">{transaction.amount}</div>
             <div className="col-span-1 p-2 bg-white text-center">{transaction.paid ? 'Yes' : 'No'}</div>

@@ -66,7 +66,7 @@ export const TableRow = ({ index, transaction, onChange, categoriesOptions, enab
         return (
             <>
                 <div className="col-span-1 p-2 bg-white text-center">{index + 1}</div>
-                <div className="col-span-2 p-2 bg-white text-center">{transaction.date}</div>
+                <div className="col-span-2 p-2 bg-white text-center">{transaction.date.toLocaleDateString()}</div>
                 <div className="col-span-2 p-2 bg-white text-center">{transaction.category}</div>
                 <div className="col-span-2 p-2 bg-white text-center">{transaction.amount}</div>
                 <div className="col-span-1 p-2 bg-white text-center">{transaction.paid ? 'Yes' : 'No'}</div>
@@ -85,7 +85,7 @@ export const TableRow = ({ index, transaction, onChange, categoriesOptions, enab
                     type="date"
                     name={`transactions[${index}].date`}
                     className="w-36 border rounded px-3 py-1"
-                    value={transaction.date}
+                    value={transaction.date.toLocaleDateString('en-CA')}
                     onChange={event => onChange?.(index, 'date', event.target.value)}
                 />
             </div>

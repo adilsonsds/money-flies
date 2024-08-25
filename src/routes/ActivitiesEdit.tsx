@@ -4,6 +4,7 @@ import { getActivity, updateActivity } from "../data/ActivitiesData";
 import PageTitle from "../components/PageTitle";
 import { useEffect, useState } from "react";
 import { TransactionsTable } from "../components/TransactionsTable";
+import { toDate } from "../utils/TransactionUtils";
 
 export default function ActivitiesEdit() {
     const { id } = useParams();
@@ -84,7 +85,12 @@ export default function ActivitiesEdit() {
                 <div className="overflow-x-auto">
                     <TransactionsTable
                         transactions={transactions.map((transaction) => ({
-                            ...transaction,
+                            id: transaction.id,
+                            date: toDate(transaction.date),
+                            category: transaction.category,
+                            amount: transaction.amount,
+                            paid: transaction.paid,
+                            description: transaction.description,
                             financialActivityId: id as string,
                             financialTitle: title
                         }))}

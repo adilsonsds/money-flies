@@ -4,6 +4,7 @@ import { createActivities } from "../data/ActivitiesData";
 import PageTitle from "../components/PageTitle";
 import { useEffect, useState } from "react";
 import { TransactionsTable } from "../components/TransactionsTable";
+import { toDate } from "../utils/TransactionUtils";
 
 export default function ActivitiesNew() {
     const navigate = useNavigate();
@@ -110,8 +111,12 @@ export default function ActivitiesNew() {
                 <div className="overflow-x-auto">
                     <TransactionsTable
                         transactions={transactions.map((transaction) => ({
-                            ...transaction,
                             id: '',
+                            date: toDate(transaction.date),
+                            category: transaction.category,
+                            amount: transaction.amount,
+                            paid: transaction.paid,
+                            description: transaction.description,
                             financialActivityId: '',
                             financialTitle: ''
                         }))}

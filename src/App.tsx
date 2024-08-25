@@ -1,6 +1,6 @@
 import './App.css'
 import { useEffect, useState } from 'react';
-import { faker } from '@faker-js/faker';
+import { faker, tr } from '@faker-js/faker';
 import { createActivities, getTransactions, removeAllActivities } from './data/ActivitiesData';
 import { FinancialActivityCreate, Period, TransactionItemList } from './types/Activity';
 import { SummaryTable, SummaryTableCategory, SummaryTableHeader, SummaryTableTotal } from './components/SummaryTable';
@@ -75,11 +75,18 @@ function App() {
 
           const activities: FinancialActivityCreate[] = [];
           data.forEach(transaction => {
+            const transactionCreate = {
+              date: new Date(transaction.date).toLocaleDateString('en-CA'),
+              category: transaction.category,
+              amount: transaction.amount,
+              paid: transaction.paid,
+              description: transaction.description
+            }
             const activity = activities.find(activity => activity.title === transaction.financialTitle);
             if (activity) {
-              activity.transactions.push(transaction);
+              activity.transactions.push(transactionCreate);
             } else {
-              activities.push({ title: transaction.financialTitle, transactions: [transaction] });
+              activities.push({ title: transaction.financialTitle, transactions: [transactionCreate] });
             }
           });
 

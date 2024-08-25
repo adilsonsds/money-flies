@@ -1,4 +1,5 @@
 import { FinancialActivity, FinancialActivityCreate, TransactionItemList, TransactionsFilter } from "../types/Activity";
+import { toDate } from "../utils/TransactionUtils";
 
 const LOCALSTORAGE_NAME = 'activities';
 
@@ -57,7 +58,7 @@ export const getTransactions = (filter?: TransactionsFilter): TransactionItemLis
         activity.transactions.forEach(transaction => {
             transactions.push({
                 id: transaction.id,
-                date: transaction.date,
+                date: toDate(transaction.date),
                 amount: transaction.amount,
                 paid: transaction.paid,
                 description: transaction.description,
@@ -71,8 +72,8 @@ export const getTransactions = (filter?: TransactionsFilter): TransactionItemLis
     if (filter) {
         transactions = transactions.filter(transaction => (
             (!filter.category || transaction.category === filter.category) &&
-            (!filter.startDate || transaction.date >= filter.startDate.toISOString()) &&
-            (!filter.endDate || transaction.date <= filter.endDate.toISOString())
+            (!filter.startDate || transaction.date >= filter.startDate) &&
+            (!filter.endDate || transaction.date <= filter.endDate)
         ));
     }
 
