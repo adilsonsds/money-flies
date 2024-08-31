@@ -2,31 +2,10 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { Activity, Transaction } from '@/types/Activity'
 
+const LOCALSTORAGE_NAME = 'activities'
+
 export const useActivityStore = defineStore('activity', () => {
-  const activities = ref<Activity[]>([
-    {
-      id: '1',
-      title: 'Groceries',
-      transactions: [
-        {
-          id: '1',
-          category: '1',
-          date: '2024-12-01',
-          amount: 100,
-          paid: true,
-          description: 'Bought some food'
-        },
-        {
-          id: '2',
-          category: '2',
-          date: '2024-09-02',
-          amount: 50,
-          paid: true,
-          description: 'Bought some more food'
-        }
-      ]
-    }
-  ])
+  const activities = ref<Activity[]>(JSON.parse(localStorage.getItem(LOCALSTORAGE_NAME) || '[]'))
 
   const getById = (id: string): Activity | undefined =>
     activities.value.find((activity) => activity.id === id)
@@ -69,6 +48,8 @@ export const useActivityStore = defineStore('activity', () => {
     } else {
       activities.value.push({ id: String(activities.value.length + 1), title, transactions })
     }
+
+    localStorage.setItem(LOCALSTORAGE_NAME, JSON.stringify(activities.value))
   }
 
   return { getById, getTotal, saveActivity }
