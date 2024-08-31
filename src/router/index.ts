@@ -18,6 +18,11 @@ const router = createRouter({
       component: () => import('../views/AboutView.vue')
     },
     {
+      path: '/categories',
+      name: 'categories',
+      component: () => import('@/views/CategoriesView.vue')
+    },
+    {
       path: '/activities/new',
       name: 'activities-new',
       component: () => import('@/views/ActivitiesRegisterView.vue')
