@@ -26,7 +26,6 @@ function handleSaveCategories() {
   saveCategories(editingCategories.value)
   router.go(-1)
 }
-
 </script>
 
 <template>
