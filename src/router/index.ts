@@ -31,6 +31,11 @@ const router = createRouter({
       path: '/activities/:id',
       name: 'activities-edit',
       component: () => import('@/views/ActivitiesRegisterView.vue')
+    },
+    {
+      path: '/transactions',
+      name: 'transactions',
+      component: () => import('@/views/TransactionsView.vue')
     }
   ]
 })

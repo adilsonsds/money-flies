@@ -19,7 +19,7 @@ function addTransaction() {
   if (transactions.value.length === 0) {
     transactions.value.push({
       id: Math.random().toString(36).substring(7),
-      category: '',
+      category: categories[0],
       date: new Date().toLocaleDateString('en-CA'),
       amount: 0,
       paid: false,
@@ -90,7 +90,7 @@ loadActivity()
             <td>{{ index + 1 }}</td>
             <td>
               <select v-model="transaction.category">
-                <option v-for="category in categories" :key="category.id" :value="category.id">
+                <option v-for="category in categories" :key="category.id" :value="category">
                   {{ category.name }}
                 </option>
               </select>
