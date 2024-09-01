@@ -38,16 +38,14 @@ const periods: SummaryPeriod[] = months.map((month) => {
         <tr v-for="category in categories" :key="category.id">
           <td>{{ category.name }}</td>
           <td v-for="period in periods" :key="period.start.toISOString()" class="text-right">
-            <RouterLink
-              :to="{
-                name: 'transactions',
-                query: {
-                  category: category.id,
-                  start: period.start.toLocaleDateString('en-CA'),
-                  end: period.end.toLocaleDateString('en-CA')
-                }
-              }"
-            >
+            <RouterLink :to="{
+              name: 'transactions',
+              query: {
+                category: category.id,
+                start: period.start.toLocaleDateString('en-CA'),
+                end: period.end.toLocaleDateString('en-CA')
+              }
+            }">
               {{
                 getTotal({ period, categoryId: category.id }).toLocaleString('pt-BR', {
                   style: 'currency',
@@ -57,14 +55,12 @@ const periods: SummaryPeriod[] = months.map((month) => {
             </RouterLink>
           </td>
           <td class="text-right">
-            <RouterLink
-              :to="{
-                name: 'transactions',
-                query: {
-                  category: category.id
-                }
-              }"
-            >
+            <RouterLink :to="{
+              name: 'transactions',
+              query: {
+                category: category.id
+              }
+            }">
               {{
                 getTotal({ categoryId: category.id }).toLocaleString('pt-BR', {
                   style: 'currency',
@@ -75,6 +71,28 @@ const periods: SummaryPeriod[] = months.map((month) => {
           </td>
         </tr>
       </tbody>
+      <tfoot>
+        <tr>
+          <td>Total</td>
+          <td v-for="period in periods" :key="period.start.toISOString()" class="text-right">
+            <RouterLink :to="{
+              name: 'transactions',
+              query: {
+                start: period.start.toLocaleDateString('en-CA'),
+                end: period.end.toLocaleDateString('en-CA')
+              }
+            }">
+              {{
+                getTotal({ period }).toLocaleString('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL'
+                })
+              }}
+            </RouterLink>
+          </td>
+          <td></td>
+        </tr>
+      </tfoot>
     </table>
   </main>
 </template>
