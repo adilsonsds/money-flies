@@ -96,7 +96,7 @@ loadActivity()
               </select>
             </td>
             <td><input type="date" v-model="transaction.date" /></td>
-            <td><input type="number" v-model="transaction.amount" /></td>
+            <td><input type="number" v-model="transaction.amount" step=".01" /></td>
             <td><input type="checkbox" v-model="transaction.paid" /></td>
             <td><input type="text" v-model="transaction.description" /></td>
             <td><button type="button" @click="removeTransaction(index)">Remove</button></td>
