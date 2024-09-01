@@ -71,3 +71,11 @@ select {
   display: flex;
   justify-content: space-between;
 }
+
+.header-links {
+  margin: 10px 0;
+}
+
+.header-links__item {
+  margin-right: 10px;
+}

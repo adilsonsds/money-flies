@@ -19,8 +19,11 @@ const periods: SummaryPeriod[] = months.map((month) => {
 <template>
   <main>
     <h1>Summary</h1>
-    <RouterLink to="/activities/new">New Activity</RouterLink>
-    <RouterLink to="/categories">My Categories</RouterLink>
+    <div class="header-links">
+      <RouterLink class="header-links__item" to="/activities/new">New Activity</RouterLink>
+      <RouterLink class="header-links__item" to="/categories">My Categories</RouterLink>
+      <RouterLink class="header-links__item" to="/backup">Backup</RouterLink>
+    </div>
     <table>
       <thead>
         <tr>
