@@ -1,0 +1,12 @@
+services:
+  dotnet-api:
+    build:
+      context: ./server/MoneyFlies.Api
+    ports:
+      - "5264:8080"
+
+  vue-app:
+    build:
+      context: ./client
+    ports:
+      - "5173:80"
