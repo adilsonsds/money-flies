@@ -3,5 +3,5 @@
 ## How to execute
 
 ```bash
-docker-compose up
+docker-compose up --build
 ```
