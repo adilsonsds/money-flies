@@ -25,7 +25,6 @@ CREATE SCHEMA act
         paid BOOLEAN NOT NULL,
         date TIMESTAMP NOT NULL,
         description VARCHAR(100) NOT NULL,
-        status VARCHAR(50) NOT NULL,
         activity_id INT NOT NULL,
         category_id INT NOT NULL,
         FOREIGN KEY (activity_id) REFERENCES act.activities(id),

@@ -35,7 +35,7 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
                      .IsRequired();
 
               builder.HasOne(t => t.Activity)
-                      .WithMany()
+                      .WithMany(p => p.Transactions)
                       .HasForeignKey("activity_id")
                       .IsRequired();
 

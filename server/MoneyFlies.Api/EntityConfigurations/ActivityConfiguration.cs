@@ -22,8 +22,8 @@ public class ActivityConfiguration : IEntityTypeConfiguration<Activity>
                 .IsRequired();
 
         builder.HasMany(a => a.Transactions)
-               .WithOne()
-               .HasForeignKey("activity_id")
+               .WithOne(p => p.Activity)
+               //    .HasForeignKey("activity_id")
                .IsRequired();
     }
 }
