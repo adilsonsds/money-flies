@@ -1,13 +1,13 @@
 export type Activity = {
-  id: string
+  id: number
   title: string
   transactions: Transaction[]
 }
 
 export type Transaction = {
-  id: string
+  id: number
   category: {
-    id: string
+    id: number
     name: string
   }
   date: string
@@ -17,7 +17,7 @@ export type Transaction = {
 }
 
 export type TransactionItemResult = {
-  id: string
+  id: number
   category: {
     id: string
     name: string
@@ -27,7 +27,7 @@ export type TransactionItemResult = {
   paid: boolean
   description: string
   activity: {
-    id: string
+    id: number
     title: string
   }
 }

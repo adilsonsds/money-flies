@@ -5,25 +5,35 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-const { categories, saveCategories } = useCategoryStore()
+const { categories, createCategory, deleteCategory } = useCategoryStore()
 
 const editingCategories = ref(categories)
 
-function deleteCategory(id: string) {
+async function confirmAndDeleteCategory(id: number) {
   if (confirm('Are you sure you want to delete this category?')) {
+    if (id > 0) await deleteCategory(id)
     editingCategories.value = editingCategories.value.filter((category) => category.id !== id)
   }
 }
 
 function addCategory() {
   editingCategories.value.push({
-    id: Math.random().toString(36).substring(7),
+    id: 0,
     name: ''
   })
 }
 
-function handleSaveCategories() {
-  saveCategories(editingCategories.value)
+async function handleSaveCategories() {
+  var promises = Array<Promise<any>>()
+
+  editingCategories.value.forEach((category) => {
+    if (category.id === 0) {
+      promises.push(createCategory(category.name))
+    }
+  })
+
+  await Promise.all(promises)
+
   router.go(-1)
 }
 </script>
@@ -47,7 +57,7 @@ function handleSaveCategories() {
             <input type="text" v-model="category.name" />
           </td>
           <td>
-            <button @click="deleteCategory(category.id)">Delete</button>
+            <button @click="confirmAndDeleteCategory(category.id)">Delete</button>
           </td>
         </tr>
       </tbody>

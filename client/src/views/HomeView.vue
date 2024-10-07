@@ -1,19 +1,13 @@
 <script setup lang="ts">
-import { useActivityStore } from '@/stores/ActivityStore'
 import { useCategoryStore } from '@/stores/CategoryStore'
-import type { SummaryPeriod } from '@/types/Summary'
+import { useSummaryStore } from '@/stores/SummaryStore';
 
-const { getTotal } = useActivityStore()
+const { getTotal } = useSummaryStore()
 const { categories } = useCategoryStore()
 
 const year = new Date().getFullYear()
-const months = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+const months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
-const periods: SummaryPeriod[] = months.map((month) => {
-  const start = new Date(year, month, 1)
-  const end = new Date(year, month + 1, 0, 23, 59, 59, 999)
-  return { start, end }
-})
 </script>
 
 <template>
@@ -28,8 +22,8 @@ const periods: SummaryPeriod[] = months.map((month) => {
       <thead>
         <tr>
           <th>Category</th>
-          <th v-for="period in periods" :key="period.start.toISOString()" style="width: 75px">
-            {{ period.start.getMonth() + 1 }}/{{ period.start.getFullYear() }}
+          <th v-for="month in months" :key="month" style="width: 75px">
+            {{ month }}/{{ year }}
           </th>
           <th style="width: 75px">Sum</th>
         </tr>
@@ -37,56 +31,49 @@ const periods: SummaryPeriod[] = months.map((month) => {
       <tbody>
         <tr v-for="category in categories" :key="category.id">
           <td>{{ category.name }}</td>
-          <td v-for="period in periods" :key="period.start.toISOString()" class="text-right">
+          <td v-for="month in months" :key="month" class="text-right">
             <RouterLink :to="{
-              name: 'transactions',
+              name: 'summary-result',
               query: {
-                category: category.id,
-                start: period.start.toLocaleDateString('en-CA'),
-                end: period.end.toLocaleDateString('en-CA')
+                categoryId: category.id,
+                month,
+                year
               }
             }">
               {{
-                getTotal({ period, categoryId: category.id }).toLocaleString('pt-BR', {
+                getTotal({ year, month, categoryId: category.id }).toLocaleString('pt-BR', {
                   style: 'currency',
                   currency: 'BRL'
-                })
+                }).replace('R$', '')
               }}
             </RouterLink>
           </td>
           <td class="text-right">
-            <RouterLink :to="{
-              name: 'transactions',
-              query: {
-                category: category.id
-              }
-            }">
-              {{
-                getTotal({ categoryId: category.id }).toLocaleString('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL'
-                })
-              }}
-            </RouterLink>
+            {{
+              getTotal({ categoryId: category.id }).toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+              }).replace('R$', '')
+            }}
           </td>
         </tr>
       </tbody>
       <tfoot>
         <tr>
           <td>Total</td>
-          <td v-for="period in periods" :key="period.start.toISOString()" class="text-right">
+          <td v-for="month in months" :key="month" class="text-right">
             <RouterLink :to="{
-              name: 'transactions',
+              name: 'summary-result',
               query: {
-                start: period.start.toLocaleDateString('en-CA'),
-                end: period.end.toLocaleDateString('en-CA')
+                year,
+                month
               }
             }">
               {{
-                getTotal({ period }).toLocaleString('pt-BR', {
+                getTotal({ year, month }).toLocaleString('pt-BR', {
                   style: 'currency',
                   currency: 'BRL'
-                })
+                }).replace('R$', '')
               }}
             </RouterLink>
           </td>

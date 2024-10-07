@@ -17,17 +17,17 @@ const router = createRouter({
     {
       path: '/activities/new',
       name: 'activities-new',
-      component: () => import('@/views/ActivitiesRegisterView.vue')
+      component: () => import('@/views/ActivityNewView.vue')
     },
     {
       path: '/activities/:id',
       name: 'activities-edit',
-      component: () => import('@/views/ActivitiesRegisterView.vue')
+      component: () => import('@/views/ActivityEditView.vue')
     },
     {
-      path: '/transactions',
-      name: 'transactions',
-      component: () => import('@/views/TransactionsView.vue')
+      path: '/summary',
+      name: 'summary-result',
+      component: () => import('@/views/SummaryResultView.vue')
     },
     {
       path: '/backup',

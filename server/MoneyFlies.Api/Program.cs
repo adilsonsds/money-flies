@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using MoneyFlies.Api.DTO;
@@ -25,6 +26,8 @@ builder.Services.AddDbContext<MoneyFliesContext>(options =>
     options.UseNpgsql(builder.Configuration["ConnectionStrings:MoneyFliesContext"]!);
 });
 
+builder.Services.AddCors();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -43,9 +46,9 @@ app.MapGet("/", () => "Hello World!");
 app.MapGet("/categories", async (MoneyFliesContext context) =>
     Results.Ok(await context.Categories.ToListAsync()));
 
-app.MapPost("/categories", async (MoneyFliesContext context, string name) =>
+app.MapPost("/categories", async (MoneyFliesContext context, [FromBody] CategoryCreateDTO categoryCreateDTO) =>
 {
-    Category category = new(name);
+    Category category = new(categoryCreateDTO.Name);
     await context.Categories.AddAsync(category);
     await context.SaveChangesAsync();
     return Results.Created($"/categories/{category.Id}", category);
@@ -70,25 +73,6 @@ app.MapDelete("/categories/{categoryId}", async (MoneyFliesContext context, int 
 app.MapPost("/activities", async (MoneyFliesContext context, ActivityCreateDTO activityCreateDTO) =>
 {
     Activity activity = new(activityCreateDTO.Title);
-
-    var transactions = new Collection<Transaction>();
-
-    foreach (var transaction in activityCreateDTO.Transactions)
-    {
-        Category? category = await context.Categories.FindAsync(transaction.CategoryId);
-        if (category is null)
-        {
-            return Results.NotFound();
-        }
-        _ = activity.AddTransaction(
-            category,
-            transaction.Description,
-            transaction.Amount,
-            transaction.Paid,
-            transaction.Date
-            );
-    }
-
     await context.Activities.AddAsync(activity);
     await context.SaveChangesAsync();
     return Results.Created($"/activities/{activity.Id}", activity.Id);
@@ -106,7 +90,12 @@ app.MapGet("/activities/{activityId}", async (MoneyFliesContext context, int act
     {
         return Results.NotFound();
     }
-    return Results.Ok(activity);
+
+    return Results.Ok(new
+    {
+        activity.Id,
+        activity.Title
+    });
 });
 
 app.MapDelete("/activities/{activityId}", async (MoneyFliesContext context, int activityId) =>
@@ -146,7 +135,29 @@ app.MapPost("/activities/{activityId}/transactions", async (MoneyFliesContext co
     return Results.Created($"/activities/{activity.Id}/transactions/{transaction.Id}", transaction.Id);
 });
 
-app.MapPut("/activities/{activityId}/transactions/{transactionId}", async (MoneyFliesContext context, int activityId, int transactionId, int categoryId, string description, decimal amount, bool paid, DateOnly date) =>
+app.MapGet("/activities/{activityId}/transactions", async (MoneyFliesContext context, int activityId) =>
+{
+    var transactions = await context.Transactions
+    .Where(a => a.Activity.Id.Equals(activityId))
+    .Include(a => a.Category)
+    .ToListAsync();
+
+    return Results.Ok(transactions.Select(t => new
+    {
+        t.Id,
+        Category = new
+        {
+            t.Category.Id,
+            t.Category.Name
+        },
+        t.Description,
+        t.Amount,
+        t.Paid,
+        t.Date
+    }));
+});
+
+app.MapPut("/activities/{activityId}/transactions/{transactionId}", async (MoneyFliesContext context, int activityId, int transactionId, [FromBody] TransactionCreateDTO transactionCreateDTO) =>
 {
     Activity? activity = await context.Activities
     .Where(a => a.Id.Equals(activityId))
@@ -163,12 +174,19 @@ app.MapPut("/activities/{activityId}/transactions/{transactionId}", async (Money
     {
         return Results.NotFound();
     }
-    Category? category = await context.Categories.FindAsync(categoryId);
+    Category? category = await context.Categories.FindAsync(transactionCreateDTO.CategoryId);
     if (category is null)
     {
         return Results.NotFound();
     }
-    transaction.Update(category, description, amount, paid, date);
+    transaction.Update(
+        category,
+        transactionCreateDTO.Description,
+        transactionCreateDTO.Amount,
+        transactionCreateDTO.Paid,
+        transactionCreateDTO.Date
+    );
+
     await context.SaveChangesAsync();
     return Results.NoContent();
 });
@@ -218,7 +236,7 @@ app.MapGet("/summaries", async (MoneyFliesContext context) =>
     return Results.Ok(summaries);
 });
 
-app.MapGet("/summaries/{year}/{month}", async (MoneyFliesContext context, int year, int month, int? categoryId) =>
+app.MapGet("/summaries/{year}/{month}", async (MoneyFliesContext context, [FromRoute] int year, [FromRoute] int month, [FromQuery] int? categoryId) =>
 {
     var query = context.Transactions
     .Where(t => t.Date.Year.Equals(year) && t.Date.Month.Equals(month));
@@ -253,5 +271,13 @@ app.MapGet("/summaries/{year}/{month}", async (MoneyFliesContext context, int ye
 });
 
 #endregion
+
+// configure cors to allow requests from any origin
+app.UseCors(builder =>
+{
+    builder.AllowAnyOrigin();
+    builder.AllowAnyMethod();
+    builder.AllowAnyHeader();
+});
 
 app.Run();
