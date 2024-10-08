@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -268,6 +268,77 @@ app.MapGet("/summaries/{year}/{month}", async (MoneyFliesContext context, [FromR
     .ToListAsync();
 
     return Results.Ok(transactions);
+});
+
+#endregion
+
+#region Backup endpoints
+
+app.MapGet("/backup/export", async (MoneyFliesContext context) =>
+{
+    var transactions = await context.Transactions
+    .Include(t => t.Activity)
+    .Include(t => t.Category)
+    .ToListAsync();
+
+    var csv = new StringBuilder();
+
+    csv.AppendLine("Activity,Category,Description,Amount,Paid,Date");
+
+    foreach (var transaction in transactions)
+    {
+        csv.AppendLine($"{transaction.Activity.Title},{transaction.Category.Name},{transaction.Description},{transaction.Amount},{transaction.Paid},{transaction.Date:yyyy-MM-dd}");
+    }
+
+    var fileName = $"backup-{DateTime.Now:yyyy-MM-dd}.csv";
+
+    return Results.File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", fileName);
+});
+
+app.MapPost("/backup/import", async (MoneyFliesContext context, [FromForm] IFormFile file) =>
+{
+    using var reader = new StreamReader(file.OpenReadStream());
+    var csv = await reader.ReadToEndAsync();
+
+    var transactions = csv.Split("\n", StringSplitOptions.RemoveEmptyEntries);
+
+    foreach (var transaction in transactions.Skip(1))
+    {
+        var values = transaction.Split(",", StringSplitOptions.RemoveEmptyEntries);
+
+        var activityName = values[0];
+        var categoryName = values[1];
+        var description = values[2];
+        var amount = decimal.Parse(values[3]);
+        var paid = bool.Parse(values[4]);
+        var date = DateOnly.Parse(values[5]);
+
+        var activity = await context.Activities
+        .Where(a => a.Title.Equals(activityName))
+        .FirstOrDefaultAsync();
+
+        if (activity is null)
+        {
+            activity = new Activity(activityName);
+            await context.Activities.AddAsync(activity);
+        }
+
+        var category = await context.Categories
+        .Where(c => c.Name.Equals(categoryName))
+        .FirstOrDefaultAsync();
+
+        if (category is null)
+        {
+            category = new Category(categoryName);
+            await context.Categories.AddAsync(category);
+        }
+
+        activity.AddTransaction(category, description, amount, paid, date);
+    }
+
+    await context.SaveChangesAsync();
+
+    return Results.NoContent();
 });
 
 #endregion
