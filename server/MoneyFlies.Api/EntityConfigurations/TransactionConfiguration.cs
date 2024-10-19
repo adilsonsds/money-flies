@@ -44,6 +44,11 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
                       .HasForeignKey("category_id")
                       .IsRequired();
 
+              builder.HasOne(t => t.Payer)
+                     .WithMany()
+                     .HasForeignKey("payer_id")
+                     .IsRequired();
+
        }
 }
 

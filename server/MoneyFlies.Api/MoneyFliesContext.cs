@@ -7,6 +7,7 @@ class MoneyFliesContext(DbContextOptions<MoneyFliesContext> options) : DbContext
     public DbSet<Activity> Activities { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
     public DbSet<Category> Categories { get; set; }
+    public DbSet<Payer> Payers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -54,10 +54,11 @@ async function handleSaveCategories() {
         <tr v-for="(category, index) in editingCategories" :key="category.id">
           <td>{{ index + 1 }}</td>
           <td>
-            <input type="text" v-model="category.name" />
+            <span v-if="category.id > 0">{{ category.name }}</span>
+            <input v-else type="text" v-model="category.name" />
           </td>
           <td>
-            <button @click="confirmAndDeleteCategory(category.id)">Delete</button>
+            <button v-if="category.id == 0" @click="confirmAndDeleteCategory(category.id)">Delete</button>
           </td>
         </tr>
       </tbody>

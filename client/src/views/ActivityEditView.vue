@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import Api from '@/api';
 import { useCategoryStore } from '@/stores/CategoryStore'
-import type { Activity, Transaction } from '@/types/Activity'
+import { usePayerStore } from '@/stores/PayerStore';
+import type { TransactionEdited } from '@/types/Activity'
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -8,10 +10,12 @@ const route = useRoute()
 const router = useRouter()
 
 const { categories } = useCategoryStore()
+const { payers } = usePayerStore()
 
 const id = ref(0)
 const title = ref('')
-const transactions = ref<Transaction[]>([])
+const activityDate = ref(new Date().toLocaleDateString('en-CA'))
+const transactions = ref<TransactionEdited[]>([])
 
 const removedTransactions = ref<number[]>([])
 
@@ -19,14 +23,12 @@ function addTransaction() {
   if (transactions.value.length === 0) {
     transactions.value.push({
       id: 0,
-      category: {
-        id: categories[0].id,
-        name: categories[0].name
-      },
+      categoryId: categories[0].id,
       date: new Date().toLocaleDateString('en-CA'),
       amount: 0,
       paid: false,
-      description: ''
+      description: '',
+      payerId: payers[0].id
     })
     return
   }
@@ -45,88 +47,19 @@ async function removeTransaction(index: number) {
   }
 }
 
-async function createTransaction(activityId: number, transaction: Transaction): Promise<number | null> {
-  try {
-    const response = await fetch(`http://localhost:5264/activities/${activityId}/transactions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        categoryId: transaction.category.id,
-        date: transaction.date,
-        amount: transaction.amount,
-        paid: transaction.paid,
-        description: transaction.description
-      })
-    })
-    if (!response.ok) {
-      throw new Error('Network response was not ok')
-    }
-
-    const transactionId = await response.json()
-    return transactionId
-  } catch (error) {
-    console.error('Failed to save transaction:', error)
-    return null;
-  }
-}
-
-async function updateTransaction(activityId: number, transaction: Transaction): Promise<boolean> {
-  try {
-    const response = await fetch(`http://localhost:5264/activities/${activityId}/transactions/${transaction.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        categoryId: transaction.category.id,
-        date: transaction.date,
-        amount: transaction.amount,
-        paid: transaction.paid,
-        description: transaction.description
-      })
-    })
-    if (!response.ok) {
-      throw new Error('Network response was not ok')
-    }
-
-    return true
-  } catch (error) {
-    console.error('Failed to update transaction:', error)
-    return false;
-  }
-}
-
-async function deleteTransaction(activityId: number, transactionId: number): Promise<boolean> {
-  try {
-    const response = await fetch(`http://localhost:5264/activities/${activityId}/transactions/${transactionId}`, {
-      method: 'DELETE'
-    })
-    if (!response.ok) {
-      throw new Error('Network response was not ok')
-    }
-
-    return true
-  } catch (error) {
-    console.error('Failed to delete transaction:', error)
-    return false;
-  }
-}
-
 async function handleSubmit() {
   const promises = []
 
   for (const transaction of transactions.value) {
     if (transaction.id === 0) {
-      promises.push(createTransaction(id.value, transaction))
+      promises.push(Api.activities.addTransaction(id.value, transaction))
     } else {
-      promises.push(updateTransaction(id.value, transaction))
+      promises.push(Api.activities.updateTransaction(id.value, transaction))
     }
   }
 
   for (const transactionId of removedTransactions.value) {
-    promises.push(deleteTransaction(id.value, transactionId))
+    promises.push(Api.activities.deleteTransaction(id.value, transactionId))
   }
 
   var results = await Promise.all(promises)
@@ -137,36 +70,6 @@ async function handleSubmit() {
   }
 }
 
-async function getActivityById(id: number): Promise<Activity | null> {
-  try {
-    const response = await fetch(`http://localhost:5264/activities/${id}`)
-    if (!response.ok) {
-      throw new Error('Network response was not ok')
-    }
-
-    const activity: Activity = await response.json()
-    return activity
-  } catch (error) {
-    console.error('Failed to get activity:', error)
-    return null
-  }
-}
-
-async function getTransactionsFromActivity(activityId: number): Promise<Transaction[] | null> {
-  try {
-    const response = await fetch(`http://localhost:5264/activities/${activityId}/transactions`)
-    if (!response.ok) {
-      throw new Error('Network response was not ok')
-    }
-
-    const transactions: Transaction[] = await response.json()
-    return transactions
-  } catch (error) {
-    console.error('Failed to get transactions:', error)
-    return null
-  }
-}
-
 async function loadActivity() {
   const activityId = route.params.id
   if (!activityId || typeof activityId !== 'string') {
@@ -174,7 +77,7 @@ async function loadActivity() {
     return
   }
 
-  const activity = await getActivityById(parseInt(activityId))
+  const activity = await Api.activities.loadById(activityId)
   if (!activity) {
     router.push('home')
     return
@@ -182,10 +85,21 @@ async function loadActivity() {
 
   id.value = activity.id
   title.value = activity.title
+  activityDate.value = activity.date
 
-  const transactionsResult = await getTransactionsFromActivity(activity.id)
-  if (transactionsResult)
-    transactions.value = transactionsResult
+  const transactionsResult = await Api.activities.listTransactions(activity.id)
+
+  transactionsResult.forEach(transaction => {
+    transactions.value.push({
+      id: transaction.id,
+      categoryId: transaction.category.id,
+      date: transaction.date,
+      amount: transaction.amount,
+      paid: transaction.paid,
+      description: transaction.description,
+      payerId: transaction.payer.id
+    })
+  })
 }
 
 loadActivity()
@@ -199,6 +113,10 @@ loadActivity()
         <label for="title">Title</label>
         <input type="text" id="title" v-model="title" readonly />
       </div>
+      <div class="">
+        <label for="activityDate">Date</label>
+        <input type="date" id="activityDate" v-model="activityDate" readonly />
+      </div>
 
       <h2>Transactions</h2>
       <table>
@@ -210,15 +128,16 @@ loadActivity()
             <th style="width: 120px">Amount</th>
             <th style="width: 60px">Paid</th>
             <th>Description</th>
+            <th style="width: 120px">Payer</th>
             <th style="width: 120px"></th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(transaction, index) in transactions" :key="transaction.id">
+          <tr v-for="(transaction, index) in transactions" :key="index">
             <td>{{ index + 1 }}</td>
             <td>
-              <select v-model="transaction.category">
-                <option v-for="category in categories" :key="category.id" :value="category">
+              <select v-model="transaction.categoryId">
+                <option v-for="category in categories" :key="category.id" :value="category.id">
                   {{ category.name }}
                 </option>
               </select>
@@ -227,6 +146,13 @@ loadActivity()
             <td><input type="number" v-model="transaction.amount" step=".01" /></td>
             <td><input type="checkbox" v-model="transaction.paid" /></td>
             <td><input type="text" v-model="transaction.description" /></td>
+            <td>
+              <select v-model="transaction.payerId">
+                <option v-for="payer in payers" :key="payer.id" :value="payer.id">
+                  {{ payer.name }}
+                </option>
+              </select>
+            </td>
             <td><button type="button" @click="removeTransaction(index)">Remove</button></td>
           </tr>
         </tbody>

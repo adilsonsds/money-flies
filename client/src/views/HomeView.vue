@@ -16,6 +16,7 @@ const months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     <div class="header-links">
       <RouterLink class="header-links__item" to="/activities/new">New Activity</RouterLink>
       <RouterLink class="header-links__item" to="/categories">My Categories</RouterLink>
+      <RouterLink class="header-links__item" to="/payers">Payers</RouterLink>
       <RouterLink class="header-links__item" to="/backup">Backup</RouterLink>
     </div>
     <table>

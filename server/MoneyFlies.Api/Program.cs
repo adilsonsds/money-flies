@@ -41,6 +41,31 @@ app.UseHttpsRedirection();
 
 app.MapGet("/", () => "Hello World!");
 
+#region Payers endpoints
+
+app.MapGet("/payers", async (MoneyFliesContext context) =>
+    Results.Ok(await context.Payers.ToListAsync()));
+
+app.MapGet("/payers/{payerId}", async (MoneyFliesContext context, int payerId) =>
+{
+    Payer? payer = await context.Payers.FindAsync(payerId);
+    if (payer is null)
+    {
+        return Results.NotFound();
+    }
+    return Results.Ok(payer);
+});
+
+app.MapPost("/payers", async (MoneyFliesContext context, [FromBody] PayerCreateDTO payerCreateDTO) =>
+{
+    Payer payer = new(payerCreateDTO.Name);
+    await context.Payers.AddAsync(payer);
+    await context.SaveChangesAsync();
+    return Results.Created($"/payers/{payer.Id}", payer);
+});
+
+#endregion
+
 #region Categories endpoints
 
 app.MapGet("/categories", async (MoneyFliesContext context) =>
@@ -72,7 +97,11 @@ app.MapDelete("/categories/{categoryId}", async (MoneyFliesContext context, int 
 
 app.MapPost("/activities", async (MoneyFliesContext context, ActivityCreateDTO activityCreateDTO) =>
 {
-    Activity activity = new(activityCreateDTO.Title);
+    Activity activity = new(
+        activityCreateDTO.Title,
+        activityCreateDTO.Date
+        );
+
     await context.Activities.AddAsync(activity);
     await context.SaveChangesAsync();
     return Results.Created($"/activities/{activity.Id}", activity.Id);
@@ -94,7 +123,9 @@ app.MapGet("/activities/{activityId}", async (MoneyFliesContext context, int act
     return Results.Ok(new
     {
         activity.Id,
-        activity.Title
+        activity.Title,
+        activity.Date,
+        activity.TotalAmount,
     });
 });
 
@@ -122,13 +153,19 @@ app.MapPost("/activities/{activityId}/transactions", async (MoneyFliesContext co
     {
         return Results.NotFound();
     }
+    Payer? payer = await context.Payers.FindAsync(transactionCreateDTO.PayerId);
+    if (payer is null)
+    {
+        return Results.NotFound();
+    }
 
     var transaction = activity.AddTransaction(
         category,
         transactionCreateDTO.Description,
         transactionCreateDTO.Amount,
         transactionCreateDTO.Paid,
-        transactionCreateDTO.Date
+        transactionCreateDTO.Date,
+        payer
         );
 
     await context.SaveChangesAsync();
@@ -140,6 +177,7 @@ app.MapGet("/activities/{activityId}/transactions", async (MoneyFliesContext con
     var transactions = await context.Transactions
     .Where(a => a.Activity.Id.Equals(activityId))
     .Include(a => a.Category)
+    .Include(a => a.Payer)
     .ToListAsync();
 
     return Results.Ok(transactions.Select(t => new
@@ -149,6 +187,11 @@ app.MapGet("/activities/{activityId}/transactions", async (MoneyFliesContext con
         {
             t.Category.Id,
             t.Category.Name
+        },
+        Payer = new
+        {
+            t.Payer.Id,
+            t.Payer.Name
         },
         t.Description,
         t.Amount,
@@ -166,26 +209,37 @@ app.MapPut("/activities/{activityId}/transactions/{transactionId}", async (Money
 
     if (activity is null)
     {
-        return Results.NotFound();
+        return Results.BadRequest();
     }
 
-    Transaction? transaction = activity.Transactions.FirstOrDefault(t => t.Id.Equals(transactionId));
-    if (transaction is null)
-    {
-        return Results.NotFound();
-    }
     Category? category = await context.Categories.FindAsync(transactionCreateDTO.CategoryId);
     if (category is null)
     {
+        return Results.BadRequest();
+    }
+
+    Payer? payer = await context.Payers.FindAsync(transactionCreateDTO.PayerId);
+    if (payer is null)
+    {
+        return Results.BadRequest();
+    }
+
+    try
+    {
+        activity.UpdateTransaction(
+            transactionId,
+            category,
+            transactionCreateDTO.Description,
+            transactionCreateDTO.Amount,
+            transactionCreateDTO.Paid,
+            transactionCreateDTO.Date,
+            payer
+        );
+    }
+    catch (ArgumentException)
+    {
         return Results.NotFound();
     }
-    transaction.Update(
-        category,
-        transactionCreateDTO.Description,
-        transactionCreateDTO.Amount,
-        transactionCreateDTO.Paid,
-        transactionCreateDTO.Date
-    );
 
     await context.SaveChangesAsync();
     return Results.NoContent();
@@ -208,7 +262,7 @@ app.MapDelete("/activities/{activityId}/transactions/{transactionId}", async (Mo
     {
         return Results.NotFound();
     }
-    activity.Transactions.Remove(transaction);
+    activity.RemoveTransaction(transaction);
     await context.SaveChangesAsync();
     return Results.NoContent();
 });
@@ -279,15 +333,16 @@ app.MapGet("/backup/export", async (MoneyFliesContext context) =>
     var transactions = await context.Transactions
     .Include(t => t.Activity)
     .Include(t => t.Category)
+    .Include(t => t.Payer)
     .ToListAsync();
 
     var csv = new StringBuilder();
 
-    csv.AppendLine("Activity,Category,Description,Amount,Paid,Date");
+    csv.AppendLine("Activity,Category,Description,Amount,Paid,Date,Payer,ActivityDate");
 
     foreach (var transaction in transactions)
     {
-        csv.AppendLine($"{transaction.Activity.Title},{transaction.Category.Name},{transaction.Description},{transaction.Amount},{transaction.Paid},{transaction.Date:yyyy-MM-dd}");
+        csv.AppendLine($"{transaction.Activity.Title},{transaction.Category.Name},{transaction.Description},{transaction.Amount},{transaction.Paid},{transaction.Date:yyyy-MM-dd},{transaction.Payer.Name},{transaction.Activity.Date:yyyy-MM-dd}");
     }
 
     var fileName = $"backup-{DateTime.Now:yyyy-MM-dd}.csv";
@@ -312,6 +367,8 @@ app.MapPost("/backup/import", async (MoneyFliesContext context, [FromForm] IForm
         var amount = decimal.Parse(values[3]);
         var paid = bool.Parse(values[4]);
         var date = DateOnly.Parse(values[5]);
+        var payerName = values[6];
+        var activityDate = DateOnly.Parse(values[7]);
 
         var activity = await context.Activities
         .Where(a => a.Title.Equals(activityName))
@@ -319,7 +376,7 @@ app.MapPost("/backup/import", async (MoneyFliesContext context, [FromForm] IForm
 
         if (activity is null)
         {
-            activity = new Activity(activityName);
+            activity = new Activity(activityName, activityDate);
             await context.Activities.AddAsync(activity);
         }
 
@@ -333,7 +390,17 @@ app.MapPost("/backup/import", async (MoneyFliesContext context, [FromForm] IForm
             await context.Categories.AddAsync(category);
         }
 
-        activity.AddTransaction(category, description, amount, paid, date);
+        var payer = await context.Payers
+        .Where(p => p.Name.Equals(payerName))
+        .FirstOrDefaultAsync();
+
+        if (payer is null)
+        {
+            payer = new Payer(payerName);
+            await context.Payers.AddAsync(payer);
+        }
+
+        activity.AddTransaction(category, description, amount, paid, date, payer);
     }
 
     await context.SaveChangesAsync();
