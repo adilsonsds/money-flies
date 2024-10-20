@@ -2,11 +2,19 @@ export type SummaryFilter = {
   year?: number
   month?: number
   categoryId?: number
+  payerId?: number
 }
 
 export type SummaryPeriod = {
   start: Date
   end: Date
+}
+
+export type PayerSummary = {
+  id: number
+  name: string
+  total: number
+  summaries: Summary[]
 }
 
 export type Summary = {
@@ -32,5 +40,9 @@ export type SummaryResultItem = {
   activity: {
     id: string
     title: string
+  }
+  payer: {
+    id: number
+    name: string
   }
 }

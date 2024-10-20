@@ -6,6 +6,7 @@ import type {
   TransactionEdited
 } from './types/Activity'
 import type { Payer } from './types/Payer'
+import type { PayerSummary, SummaryFilter, SummaryResultItem } from './types/Summary'
 
 const post = async <T>(url: string, data: any): Promise<T | null> => {
   try {
@@ -127,6 +128,21 @@ const Api = {
     },
     create: async (name: string) => {
       return await post<number>('http://localhost:5264/payers', { name })
+    }
+  },
+  summaries: {
+    load: async () => {
+      return await getList<PayerSummary>('http://localhost:5264/summaries')
+    },
+    filterResults: async ({ year, month, categoryId, payerId }: SummaryFilter) => {
+      const url = new URL(`http://localhost:5264/summaries/${year}/${month}`)
+      if (categoryId) {
+        url.searchParams.append('categoryId', categoryId.toString())
+      }
+      if (payerId) {
+        url.searchParams.append('payerId', payerId.toString())
+      }
+      return await getList<SummaryResultItem>(url.toString())
     }
   }
 }

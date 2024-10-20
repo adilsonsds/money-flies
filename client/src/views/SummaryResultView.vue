@@ -1,26 +1,25 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
 import type { SummaryFilter, SummaryResultItem } from '@/types/Summary'
-import { useSummaryStore } from '@/stores/SummaryStore';
 import { ref } from 'vue';
+import Api from '@/api';
 
 const route = useRoute()
 const router = useRouter()
-
-const { getResult } = useSummaryStore()
 
 const getFilter = (): SummaryFilter => {
   return {
     year: route.query.year ? parseInt(String(route.query.year)) : new Date().getFullYear(),
     month: route.query.month ? parseInt(String(route.query.month)) : new Date().getMonth() + 1,
-    categoryId: route.query.categoryId ? parseInt(String(route.query.categoryId)) : undefined
+    categoryId: route.query.categoryId ? parseInt(String(route.query.categoryId)) : undefined,
+    payerId: route.query.payerId ? parseInt(String(route.query.payerId)) : undefined
   }
 }
 
 const resultItens = ref<SummaryResultItem[]>([])
 
 async function loadResult() {
-  const result = await getResult(getFilter())
+  const result = await Api.summaries.filterResults(getFilter())
   resultItens.value = result
 }
 
@@ -38,6 +37,7 @@ loadResult()
         <th style="width: 120px">Valor</th>
         <th style="width: 90px">Pago?</th>
         <th>Descrição</th>
+        <th>Payer</th>
         <th style="width: 30px"></th>
       </tr>
     </thead>
@@ -56,6 +56,7 @@ loadResult()
         </td>
         <td>{{ result.paid ? 'Sim' : 'Não' }}</td>
         <td>{{ result.description }}</td>
+        <td>{{ result.payer.name }}</td>
         <td>
           <RouterLink :to="{ name: 'activities-edit', params: { id: result.activity.id } }">
             Editar
