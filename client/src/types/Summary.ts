@@ -20,7 +20,7 @@ export type PayerSummary = {
 export type Summary = {
   year: number
   month: number
-  total: number
+  totalAmount: number
   category: {
     id: number
     name: string

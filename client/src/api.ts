@@ -1,12 +1,13 @@
 import type {
   Activity,
   ActivityCreated,
-  Transaction,
+  Transaction as Transaction_Old,
   TransactionCreated,
   TransactionEdited
 } from './types/Activity'
+import type { Account, RegisterTransaction, Transaction } from './types/Transaction'
 import type { Payer } from './types/Payer'
-import type { PayerSummary, SummaryFilter, SummaryResultItem } from './types/Summary'
+import type { Summary, SummaryFilter, SummaryResultItem } from './types/Summary'
 
 const post = async <T>(url: string, data: any): Promise<T | null> => {
   try {
@@ -91,51 +92,51 @@ const deleteRequest = async (url: string): Promise<void> => {
   }
 }
 
+const BASE_API_URL = 'http://localhost:5264/api'
+
 const Api = {
   activities: {
     loadById: async (id: number | string) => {
-      return await getObjetct<Activity>(`http://localhost:5264/activities/${id}`)
+      return await getObjetct<Activity>(`${BASE_API_URL}/activities/${id}`)
     },
     create: async (activity: ActivityCreated) => {
-      return await post<number>('http://localhost:5264/activities', activity)
+      return await post<number>(`${BASE_API_URL}/activities`, activity)
     },
     listTransactions: async (activityId: number) => {
-      return await getList<Transaction>(
-        `http://localhost:5264/activities/${activityId}/transactions`
-      )
+      return await getList<Transaction_Old>(`${BASE_API_URL}/activities/${activityId}/transactions`)
     },
     addTransaction: async (activityId: number, transaction: TransactionCreated) => {
       return await post<number>(
-        `http://localhost:5264/activities/${activityId}/transactions`,
+        `${BASE_API_URL}/activities/${activityId}/transactions`,
         transaction
       )
     },
     updateTransaction: async (activityId: number, transaction: TransactionEdited) => {
       return await put(
-        `http://localhost:5264/activities/${activityId}/transactions/${transaction.id}`,
+        `${BASE_API_URL}/activities/${activityId}/transactions/${transaction.id}`,
         transaction
       )
     },
     deleteTransaction: async (activityId: number, transactionId: number) => {
       return await deleteRequest(
-        `http://localhost:5264/activities/${activityId}/transactions/${transactionId}`
+        `${BASE_API_URL}/activities/${activityId}/transactions/${transactionId}`
       )
     }
   },
   payers: {
     list: async () => {
-      return await getList<Payer>('http://localhost:5264/payers')
+      return await getList<Payer>(`${BASE_API_URL}/payers`)
     },
     create: async (name: string) => {
-      return await post<number>('http://localhost:5264/payers', { name })
+      return await post<number>(`${BASE_API_URL}/payers`, { name })
     }
   },
   summaries: {
     load: async () => {
-      return await getList<PayerSummary>('http://localhost:5264/summaries')
+      return await getList<Summary>(`${BASE_API_URL}/summaries`)
     },
     filterResults: async ({ year, month, categoryId, payerId }: SummaryFilter) => {
-      const url = new URL(`http://localhost:5264/summaries/${year}/${month}`)
+      const url = new URL(`${BASE_API_URL}/summaries/${year}/${month}`)
       if (categoryId) {
         url.searchParams.append('categoryId', categoryId.toString())
       }
@@ -143,6 +144,21 @@ const Api = {
         url.searchParams.append('payerId', payerId.toString())
       }
       return await getList<SummaryResultItem>(url.toString())
+    }
+  },
+  transactions: {
+    list: async (page: number, pageSize: number) => {
+      return await getList<Transaction>(
+        `${BASE_API_URL}/transactions?page=${page}&pageSize=${pageSize}`
+      )
+    },
+    create: async (transaction: RegisterTransaction) => {
+      return await post<void>(`${BASE_API_URL}/transactions`, transaction)
+    }
+  },
+  accounts: {
+    list: async () => {
+      return await getList<Account>(`${BASE_API_URL}/accounts`)
     }
   }
 }

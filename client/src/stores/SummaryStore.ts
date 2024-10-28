@@ -1,32 +1,28 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { PayerSummary, SummaryFilter } from '@/types/Summary'
+import type { Summary, SummaryFilter } from '@/types/Summary'
 import Api from '@/api'
 
 const LOCALSTORAGE_NAME = 'summary'
 
 export const useSummaryStore = defineStore('summaries', () => {
-  const payerSummaries = ref<PayerSummary[]>([])
+  const summaries = ref<Summary[]>([])
 
   async function fetchData() {
-    payerSummaries.value = await Api.summaries.load()
-    localStorage.setItem(LOCALSTORAGE_NAME, JSON.stringify(payerSummaries.value))
+    summaries.value = await Api.summaries.load()
+    localStorage.setItem(LOCALSTORAGE_NAME, JSON.stringify(summaries.value))
   }
 
-  function getTotal({ year, month, categoryId, payerId }: SummaryFilter): number {
+  function getTotal({ year, month, categoryId }: SummaryFilter): number {
     let total = 0
 
-    for (const payerSummary of payerSummaries.value) {
-      if (!payerId || payerSummary.id === payerId) {
-        for (const summary of payerSummary.summaries) {
-          if (
-            (!year || summary.year === year) &&
-            (!month || summary.month === month) &&
-            (!categoryId || summary.category.id === categoryId)
-          ) {
-            total += summary.total
-          }
-        }
+    for (const summary of summaries.value) {
+      if (
+        (!year || summary.year === year) &&
+        (!month || summary.month === month) &&
+        (!categoryId || summary.category.id === categoryId)
+      ) {
+        total += summary.totalAmount
       }
     }
 
@@ -35,5 +31,5 @@ export const useSummaryStore = defineStore('summaries', () => {
 
   fetchData()
 
-  return { payerSummaries, getTotal }
+  return { summaries, getTotal }
 })

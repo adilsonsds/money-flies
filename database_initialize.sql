@@ -14,14 +14,14 @@ CREATE SCHEMA act
         name TEXT NOT NULL
     );
 
-    CREATE TABLE act.payers (
+    CREATE TABLE act.accounts (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL
     );
 
     CREATE TABLE act.activities (
         id SERIAL PRIMARY KEY,
-        title VARCHAR(100) NOT NULL,
+        name VARCHAR(100) NOT NULL,
         total_amount DECIMAL(10, 2) NOT NULL,
         date TIMESTAMP NOT NULL
     );
@@ -32,10 +32,12 @@ CREATE SCHEMA act
         paid BOOLEAN NOT NULL,
         date TIMESTAMP NOT NULL,
         description VARCHAR(100) NOT NULL,
-        activity_id INT NOT NULL,
+        activity_id INT NULL,
         category_id INT NOT NULL,
-        payer_id INT NOT NULL,
+        account_id_from INT NOT NULL,
+        account_id_to INT NOT NULL,
         FOREIGN KEY (activity_id) REFERENCES act.activities(id),
         FOREIGN KEY (category_id) REFERENCES act.categories(id),
-        FOREIGN KEY (payer_id) REFERENCES act.payer(id)
+        FOREIGN KEY (account_id_from) REFERENCES act.accounts(id),
+        FOREIGN KEY (account_id_to) REFERENCES act.accounts(id)
     );

@@ -9,7 +9,7 @@ export const useCategoryStore = defineStore('category', () => {
 
   async function fetchCategories() {
     try {
-      const response = await fetch('http://localhost:5264/categories')
+      const response = await fetch('http://localhost:5264/api/categories')
       if (!response.ok) {
         throw new Error('Network response was not ok')
       }
@@ -23,7 +23,7 @@ export const useCategoryStore = defineStore('category', () => {
 
   async function createCategory(name: string): Promise<number> {
     try {
-      const response = await fetch('http://localhost:5264/categories', {
+      const response = await fetch('http://localhost:5264/api/categories', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -47,7 +47,7 @@ export const useCategoryStore = defineStore('category', () => {
 
   async function deleteCategory(id: number): Promise<void> {
     try {
-      const response = await fetch(`http://localhost:5264/categories/${id}`, {
+      const response = await fetch(`http://localhost:5264/api/categories/${id}`, {
         method: 'DELETE'
       })
       if (!response.ok) {

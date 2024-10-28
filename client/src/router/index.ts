@@ -38,6 +38,18 @@ const router = createRouter({
       path: '/backup',
       name: 'backup',
       component: () => import('@/views/BackupView.vue')
+    },
+    {
+      path: '/transactions',
+      name: 'transactions',
+      component: () => import('@/views/TransactionsView.vue'),
+      children: [
+        {
+          path: 'new',
+          name: 'transactions-new',
+          component: () => import('@/views/TransactionsNewView.vue')
+        }
+      ]
     }
   ]
 })

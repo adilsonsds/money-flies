@@ -1,7 +1,7 @@
 services:
   mf_api:
     build:
-      context: ./server/MoneyFlies.Api
+      context: ./server
     ports:
       - "5264:8080"
     networks:
