@@ -2,18 +2,22 @@
 import Api from '@/api';
 import { useAccountStore } from '@/stores/AccountStore';
 import { useCategoryStore } from '@/stores/CategoryStore';
+import type { RegisterTransaction } from '@/types/Transaction';
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+
+const LOCALSTORAGE_LAST_TRANSACTION = 'transactions-modal-create-last-transaction'
+const lastTransaction: RegisterTransaction = JSON.parse(localStorage.getItem(LOCALSTORAGE_LAST_TRANSACTION) || '{}')
 
 const route = useRoute()
 const router = useRouter()
 
 const { categories } = useCategoryStore()
 const { accounts } = useAccountStore()
-const date = ref<string>(new Date().toLocaleDateString('en-CA'))
+const date = ref<string>(lastTransaction.date || new Date().toLocaleDateString('en-CA'))
 const amount = ref(0)
 const categoryId = ref<number | null>(null)
-const paid = ref(false)
+const paid = ref<boolean | string>(false)
 const description = ref('')
 const accountFromId = ref<number | null>(1)
 const accountToId = ref<number | null>(2)
@@ -23,15 +27,18 @@ function closeModal() {
 }
 
 async function handleSubmit() {
-    await Api.transactions.create({
+    const transaction = {
         categoryId: categoryId.value!,
         date: date.value,
         amount: amount.value,
-        paid: paid.value,
+        paid: paid.value == 'true' || paid.value == true,
         description: description.value,
         accountIdFrom: accountFromId.value!,
         accountIdTo: accountToId.value!
-    })
+    };
+
+    await Api.transactions.create(transaction)
+    localStorage.setItem(LOCALSTORAGE_LAST_TRANSACTION, JSON.stringify(transaction))
 
     closeModal()
 }
@@ -43,7 +50,7 @@ async function loadTransaction(transactionId: string) {
         return
     }
 
-    date.value = incrementMonth(transaction.date)
+    date.value = transaction.date
     amount.value = transaction.amount
     categoryId.value = transaction.category.id
     paid.value = transaction.paid
@@ -71,6 +78,12 @@ function incrementMonth(date: string): string {
     return dateObject.toLocaleDateString('en-CA');
 }
 
+function changeAccounts() {
+    const temp = accountFromId.value
+    accountFromId.value = accountToId.value
+    accountToId.value = temp
+}
+
 </script>
 <template>
     <div class="overlay">
@@ -81,6 +94,7 @@ function incrementMonth(date: string): string {
                 <div class="form-group">
                     <label for="date">Data:</label>
                     <input id="date" type="date" v-model="date" />
+                    <button type="button" @click="date = incrementMonth(date)" class="link">Próximo mês</button>
                 </div>
                 <div class="form-group">
                     <label for="amount">Valor:</label>
@@ -108,23 +122,26 @@ function incrementMonth(date: string): string {
                     <label for="description">Descrição</label>
                     <input id="description" type="text" v-model="description" />
                 </div>
-                <div class="form-group">
-                    <label for="accountFrom">Pagador</label>
-                    <select id="accountFrom" v-model="accountFromId">
-                        <option value="">Selecione uma conta</option>
-                        <option v-for="account in accounts" :key="account.id" :value="account.id">
-                            {{ account.name }}
-                        </option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="accountTo">Recebedor</label>
-                    <select id="accountTo" v-model="accountToId">
-                        <option value="">Selecione uma conta</option>
-                        <option v-for="account in accounts" :key="account.id" :value="account.id">
-                            {{ account.name }}
-                        </option>
-                    </select>
+                <div style="display: flex; justify-content: space-between;align-items: last baseline;">
+                    <div class="form-group">
+                        <label for="accountFrom">Pagador</label>
+                        <select id="accountFrom" v-model="accountFromId">
+                            <option value="">Selecione uma conta</option>
+                            <option v-for="account in accounts" :key="account.id" :value="account.id">
+                                {{ account.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <button type="button" @click="changeAccounts" style="margin: 0 10px;">Inverter</button>
+                    <div class="form-group">
+                        <label for="accountTo">Recebedor</label>
+                        <select id="accountTo" v-model="accountToId">
+                            <option value="">Selecione uma conta</option>
+                            <option v-for="account in accounts" :key="account.id" :value="account.id">
+                                {{ account.name }}
+                            </option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-group" style="display: flex; justify-content: space-between;">
                     <button type="button" @click="closeModal">Cancelar e sair</button>
@@ -158,5 +175,14 @@ function incrementMonth(date: string): string {
 
 .form-group {
     margin-bottom: 10px;
+}
+
+.link {
+    background: none;
+    border: none;
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
 }
 </style>

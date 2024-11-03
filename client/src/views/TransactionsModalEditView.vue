@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import Api from '@/api';
-import { useAccountStore } from '@/stores/AccountStore';
-import { useCategoryStore } from '@/stores/CategoryStore';
+import { useAccountStore } from '@/stores/AccountStore'
+import { useCategoryStore } from '@/stores/CategoryStore'
 import { ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
@@ -42,6 +42,19 @@ async function handleDelete() {
     closeModal()
 }
 
+function incrementMonth(date: string): string {
+    const parts = date.split('-');
+    const dateObject = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    dateObject.setMonth(dateObject.getMonth() + 1);
+    return dateObject.toLocaleDateString('en-CA');
+}
+
+function changeAccounts() {
+    const temp = accountFromId.value
+    accountFromId.value = accountToId.value
+    accountToId.value = temp
+}
+
 async function loadTransaction() {
     const transactionId = route.params.id as string;
     const transaction = await Api.transactions.loadById(transactionId)
@@ -74,6 +87,7 @@ if (route.params.id) {
                 <div class="form-group">
                     <label for="date">Data:</label>
                     <input id="date" type="date" v-model="date" />
+                    <button type="button" @click="date = incrementMonth(date)" class="link">Próximo mês</button>
                 </div>
                 <div class="form-group">
                     <label for="amount">Valor:</label>
@@ -101,23 +115,26 @@ if (route.params.id) {
                     <label for="description">Descrição</label>
                     <input id="description" type="text" v-model="description" />
                 </div>
-                <div class="form-group">
-                    <label for="accountFrom">Pagador</label>
-                    <select id="accountFrom" v-model="accountFromId">
-                        <option value="">Selecione uma conta</option>
-                        <option v-for="account in accounts" :key="account.id" :value="account.id">
-                            {{ account.name }}
-                        </option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="accountTo">Recebedor</label>
-                    <select id="accountTo" v-model="accountToId">
-                        <option value="">Selecione uma conta</option>
-                        <option v-for="account in accounts" :key="account.id" :value="account.id">
-                            {{ account.name }}
-                        </option>
-                    </select>
+                <div style="display: flex; justify-content: space-between;align-items: last baseline;">
+                    <div class="form-group">
+                        <label for="accountFrom">Pagador</label>
+                        <select id="accountFrom" v-model="accountFromId">
+                            <option value="">Selecione uma conta</option>
+                            <option v-for="account in accounts" :key="account.id" :value="account.id">
+                                {{ account.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <button type="button" @click="changeAccounts" style="margin: 0 10px;">Inverter</button>
+                    <div class="form-group">
+                        <label for="accountTo">Recebedor</label>
+                        <select id="accountTo" v-model="accountToId">
+                            <option value="">Selecione uma conta</option>
+                            <option v-for="account in accounts" :key="account.id" :value="account.id">
+                                {{ account.name }}
+                            </option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-group" style="display: flex; justify-content: space-between;">
                     <button type="button" @click="closeModal">Cancelar e sair</button>
@@ -152,5 +169,14 @@ if (route.params.id) {
 
 .form-group {
     margin-bottom: 10px;
+}
+
+.link {
+    background: none;
+    border: none;
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
 }
 </style>
