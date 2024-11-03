@@ -37,6 +37,11 @@ async function handleSubmit() {
     closeModal()
 }
 
+async function handleDelete() {
+    await Api.transactions.delete(id.value)
+    closeModal()
+}
+
 async function loadTransaction() {
     const transactionId = route.params.id as string;
     const transaction = await Api.transactions.loadById(transactionId)
@@ -116,6 +121,7 @@ if (route.params.id) {
                 </div>
                 <div class="form-group" style="display: flex; justify-content: space-between;">
                     <button type="button" @click="closeModal">Cancelar e sair</button>
+                    <button type="button" @click="handleDelete">Excluir</button>
                     <button type="submit">Salvar</button>
                 </div>
             </form>

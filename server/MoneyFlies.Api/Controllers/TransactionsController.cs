@@ -92,4 +92,17 @@ public class TransactionsController(ITransactionRepository repository) : Control
         await _repository.UpdateAsync(transaction);
         return Ok(transaction);
     }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var transaction = await _repository.GetByIdAsync(id);
+        if (transaction == null)
+        {
+            return NotFound();
+        }
+
+        await _repository.DeleteAsync(transaction);
+        return NoContent();
+    }
 }
