@@ -10,7 +10,6 @@ const router = useRouter()
 
 const { categories } = useCategoryStore()
 const { accounts } = useAccountStore()
-const id = ref(0)
 const date = ref<string>(new Date().toLocaleDateString('en-CA'))
 const amount = ref(0)
 const categoryId = ref<number | null>(null)

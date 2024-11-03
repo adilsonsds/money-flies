@@ -23,10 +23,7 @@ const getFormatedTotal = (filter: SummaryFilter) => {
     <h1>Summary</h1>
     <div class="header-links">
       <RouterLink class="header-links__item" to="/transactions">Recents transactions</RouterLink>
-      <RouterLink class="header-links__item" to="/activities/new">New Activity</RouterLink>
       <RouterLink class="header-links__item" to="/categories">My Categories</RouterLink>
-      <RouterLink class="header-links__item" to="/payers">Payers</RouterLink>
-      <RouterLink class="header-links__item" to="/backup">Backup</RouterLink>
     </div>
     <table>
       <thead>
