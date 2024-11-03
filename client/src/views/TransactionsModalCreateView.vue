@@ -20,7 +20,7 @@ const accountFromId = ref<number | null>(1)
 const accountToId = ref<number | null>(2)
 
 function closeModal() {
-    router.replace({ name: 'transactions' })
+    router.go(-1)
 }
 
 async function handleSubmit() {
