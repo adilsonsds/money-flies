@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useCategoryStore } from '@/stores/CategoryStore'
-import { useSummaryStore } from '@/stores/SummaryStore';
-import type { SummaryFilter } from '@/types/Summary';
+import { useSummaryStore } from '@/stores/SummaryStore'
+import type { SummaryFilter } from '@/types/Summary'
 
 const { getTotal } = useSummaryStore()
 const { categories } = useCategoryStore()
@@ -43,7 +43,7 @@ const getFormatedTotal = (filter: SummaryFilter) => {
           <td>{{ category.name }}</td>
           <td v-for="month in months" :key="month" class="text-right">
             <RouterLink :to="{
-              name: 'summary-result',
+              name: 'transactions',
               query: {
                 categoryId: category.id,
                 month,
@@ -63,7 +63,7 @@ const getFormatedTotal = (filter: SummaryFilter) => {
           <td>Total</td>
           <td v-for="month in months" :key="month" class="text-right">
             <RouterLink :to="{
-              name: 'summary-result',
+              name: 'transactions',
               query: {
                 year,
                 month

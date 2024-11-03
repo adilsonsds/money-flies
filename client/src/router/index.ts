@@ -15,31 +15,6 @@ const router = createRouter({
       component: () => import('@/views/CategoriesView.vue')
     },
     {
-      path: '/payers',
-      name: 'payers',
-      component: () => import('@/views/PayersView.vue')
-    },
-    {
-      path: '/activities/new',
-      name: 'activities-new',
-      component: () => import('@/views/ActivityNewView.vue')
-    },
-    {
-      path: '/activities/:id',
-      name: 'activities-edit',
-      component: () => import('@/views/ActivityEditView.vue')
-    },
-    {
-      path: '/summary',
-      name: 'summary-result',
-      component: () => import('@/views/SummaryResultView.vue')
-    },
-    {
-      path: '/backup',
-      name: 'backup',
-      component: () => import('@/views/BackupView.vue')
-    },
-    {
       path: '/transactions',
       name: 'transactions',
       component: () => import('@/views/TransactionsView.vue'),

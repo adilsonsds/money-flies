@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { Category } from '@/types/Category'
+import type { Category } from '@/types/Transaction'
 
 const LOCALSTORAGE_NAME = 'categories'
 

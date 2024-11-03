@@ -3,12 +3,7 @@ export type Account = {
   name: string
 }
 
-type Category = {
-  id: number
-  name: string
-}
-
-type Activity = {
+export type Category = {
   id: number
   name: string
 }
@@ -16,7 +11,6 @@ type Activity = {
 export type Transaction = {
   id: number
   category: Category
-  activity?: Activity
   accountFrom: Account
   accountTo: Account
   date: string
