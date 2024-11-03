@@ -13,7 +13,7 @@ async function loadTransactions() {
 }
 
 onBeforeRouteUpdate((to, from) => {
-    if (from.name === 'transactions-new') {
+    if (from.name === 'transactions-create' || from.name === 'transactions-edit') {
         loadTransactions();
     }
 });
@@ -35,7 +35,7 @@ loadTransactions();
                 <th>Descrição</th>
                 <th style="width: 120px">Pagador</th>
                 <th style="width: 120px">Recebedor</th>
-                <th style="width: 30px"></th>
+                <th style="width: 120px"></th>
             </tr>
         </thead>
         <tbody>
@@ -55,9 +55,11 @@ loadTransactions();
                 <td>{{ result.accountFrom.name }}</td>
                 <td>{{ result.accountTo.name }}</td>
                 <td>
-                    <!-- <RouterLink :to="{ name: 'activities-edit', params: { id: result.activity.id } }">
-                        Editar
-                    </RouterLink> -->
+                    <RouterLink :to="{ name: 'transactions-edit', params: { id: result.id } }">Editar</RouterLink>
+                    <RouterLink :to="{ name: 'transactions-create', query: { cloneId: result.id } }"
+                        style="margin-left: 6px;">
+                        Copiar
+                    </RouterLink>
                 </td>
             </tr>
         </tbody>

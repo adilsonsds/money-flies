@@ -27,31 +27,9 @@ internal class TransactionRepository(MoneyFliesContext context) : Repository<Tra
         }
 
         var result = await transactions
-            .Select(g => new TransactionDTO
-            {
-                Id = g.Id,
-                Category = new TransactionDTO.CategoryTransactionDTO
-                {
-                    Id = g.Category.Id,
-                    Name = g.Category.Name
-                },
-                AccountFrom = new TransactionDTO.AccountTransactionDTO
-                {
-                    Id = g.From.Id,
-                    Name = g.From.Name
-                },
-                AccountTo = new TransactionDTO.AccountTransactionDTO
-                {
-                    Id = g.To.Id,
-                    Name = g.To.Name
-                },
-                Description = g.Description,
-                Amount = g.Amount,
-                Paid = g.Paid,
-                Date = g.Date
-            })
             .OrderByDescending(t => t.Id)
             .Skip((filter.Page - 1) * filter.PageSize).Take(filter.PageSize)
+            .Select(t => new TransactionDTO(t))
             .ToListAsync();
 
         return result;

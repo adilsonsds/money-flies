@@ -3,16 +3,18 @@ import Api from '@/api';
 import { useAccountStore } from '@/stores/AccountStore';
 import { useCategoryStore } from '@/stores/CategoryStore';
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
+const route = useRoute()
 const router = useRouter()
 
 const { categories } = useCategoryStore()
 const { accounts } = useAccountStore()
+const id = ref(0)
 const date = ref<string>(new Date().toLocaleDateString('en-CA'))
 const amount = ref(0)
 const categoryId = ref<number | null>(null)
-const paid = ref(false)
+const paid = ref<boolean | string>(false)
 const description = ref('')
 const accountFromId = ref<number | null>(1)
 const accountToId = ref<number | null>(2)
@@ -22,17 +24,39 @@ function closeModal() {
 }
 
 async function handleSubmit() {
-    await Api.transactions.create({
+    await Api.transactions.update(id.value, {
         categoryId: categoryId.value!,
         date: date.value,
         amount: amount.value,
-        paid: paid.value,
+        paid: paid.value == 'true' || paid.value == true,
         description: description.value,
         accountIdFrom: accountFromId.value!,
         accountIdTo: accountToId.value!
     })
 
     closeModal()
+}
+
+async function loadTransaction() {
+    const transactionId = route.params.id as string;
+    const transaction = await Api.transactions.loadById(transactionId)
+
+    if (!transaction) {
+        return
+    }
+
+    id.value = transaction.id
+    date.value = transaction.date
+    amount.value = transaction.amount
+    categoryId.value = transaction.category.id
+    paid.value = transaction.paid
+    description.value = transaction.description
+    accountFromId.value = transaction.accountFrom.id
+    accountToId.value = transaction.accountTo.id
+}
+
+if (route.params.id) {
+    loadTransaction()
 }
 
 </script>

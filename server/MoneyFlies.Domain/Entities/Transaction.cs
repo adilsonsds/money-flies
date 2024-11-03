@@ -32,4 +32,15 @@ public class Transaction : Entity
     public Account To { get; private set; }
     public DateOnly Date { get; private set; }
     public bool Paid { get; private set; }
+
+    public void Update(decimal amount, Category category, string description, Account accountFrom, Account accountTo, DateOnly date, bool paid)
+    {
+        Amount = amount;
+        Category = category;
+        Description = description;
+        From = accountFrom;
+        To = accountTo;
+        Date = date;
+        Paid = paid;
+    }
 }

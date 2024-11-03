@@ -16,6 +16,18 @@ public class TransactionsController(ITransactionRepository repository) : Control
     public async Task<IActionResult> Get([FromQuery] TransactionsFilter filter) =>
         Ok(await _repository.ListPagedAsync(filter));
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> Get(int id)
+    {
+        var transaction = await _repository.GetByIdAsync(id);
+        if (transaction == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(new TransactionDTO(transaction));
+    }
+
     [HttpPost]
     public async Task<IActionResult> Post(
         [FromServices] ICategoryRepository categoryRepository,
@@ -42,6 +54,42 @@ public class TransactionsController(ITransactionRepository repository) : Control
         );
 
         await _repository.AddAsync(transaction);
+        return Ok(transaction);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Put(
+        [FromServices] ICategoryRepository categoryRepository,
+        [FromServices] IAccountRepository accountRepository,
+        int id,
+        [FromBody] TransactionModel model)
+    {
+        var category = await categoryRepository.GetByIdAsync(model.CategoryId);
+        var accountFrom = await accountRepository.GetByIdAsync(model.AccountIdFrom);
+        var accountTo = await accountRepository.GetByIdAsync(model.AccountIdTo);
+
+        if (category == null || accountFrom == null || accountTo == null)
+        {
+            return BadRequest();
+        }
+
+        var transaction = await _repository.GetByIdAsync(id);
+        if (transaction == null)
+        {
+            return NotFound();
+        }
+
+        transaction.Update(
+            model.Amount,
+            category,
+            model.Description,
+            accountFrom,
+            accountTo,
+            model.Date,
+            model.Paid
+        );
+
+        await _repository.UpdateAsync(transaction);
         return Ok(transaction);
     }
 }

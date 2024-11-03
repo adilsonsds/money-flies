@@ -154,6 +154,12 @@ const Api = {
     },
     create: async (transaction: RegisterTransaction) => {
       return await post<void>(`${BASE_API_URL}/transactions`, transaction)
+    },
+    loadById: async (id: number | string) => {
+      return await getObjetct<Transaction>(`${BASE_API_URL}/transactions/${id}`)
+    },
+    update: async (id: number, transaction: RegisterTransaction) => {
+      return await put(`${BASE_API_URL}/transactions/${id}`, transaction)
     }
   },
   accounts: {

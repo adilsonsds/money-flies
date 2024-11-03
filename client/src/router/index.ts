@@ -46,8 +46,13 @@ const router = createRouter({
       children: [
         {
           path: 'new',
-          name: 'transactions-new',
-          component: () => import('@/views/TransactionsNewView.vue')
+          name: 'transactions-create',
+          component: () => import('@/views/TransactionsModalCreateView.vue')
+        },
+        {
+          path: 'edit/:id',
+          name: 'transactions-edit',
+          component: () => import('@/views/TransactionsModalEditView.vue')
         }
       ]
     }
