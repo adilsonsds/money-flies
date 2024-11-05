@@ -1,4 +1,9 @@
-import type { Account, RegisterTransaction, Transaction } from './types/Transaction'
+import type {
+  Account,
+  RegisterTransaction,
+  Transaction,
+  TransactionsFilter
+} from './types/Transaction'
 import type { Summary } from './types/Summary'
 
 const post = async <T>(url: string, data: any): Promise<T | null> => {
@@ -93,10 +98,24 @@ const Api = {
     }
   },
   transactions: {
-    list: async (page: number, pageSize: number) => {
-      return await getList<Transaction>(
-        `${BASE_API_URL}/transactions?page=${page}&pageSize=${pageSize}`
-      )
+    list: async (page: number, pageSize: number, filter: TransactionsFilter) => {
+      const url = new URL(`${BASE_API_URL}/transactions`)
+      url.searchParams.set('page', page.toString())
+      url.searchParams.set('pageSize', pageSize.toString())
+
+      if (filter.year) {
+        url.searchParams.set('year', filter.year.toString())
+      }
+
+      if (filter.month) {
+        url.searchParams.set('month', filter.month.toString())
+      }
+
+      if (filter.categoryId) {
+        url.searchParams.set('categoryId', filter.categoryId.toString())
+      }
+
+      return await getList<Transaction>(url.toString())
     },
     create: async (transaction: RegisterTransaction) => {
       return await post<void>(`${BASE_API_URL}/transactions`, transaction)

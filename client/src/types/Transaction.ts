@@ -28,3 +28,9 @@ export type RegisterTransaction = {
   accountIdFrom: number
   accountIdTo: number
 }
+
+export type TransactionsFilter = {
+  year?: number
+  month?: number
+  categoryId?: number
+}

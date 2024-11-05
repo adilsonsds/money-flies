@@ -15,7 +15,7 @@ public class CategoriesController(IRepository<Category> repository) : Controller
     public async Task<IActionResult> Get()
     {
         var categories = await _repository.ListAsync();
-        return Ok(categories.Select(c => new { c.Id, c.Name }).ToList());
+        return Ok(categories.Select(c => new { c.Id, c.Name }).OrderBy(c => c.Name).ToList());
     }
 
     [HttpPost]

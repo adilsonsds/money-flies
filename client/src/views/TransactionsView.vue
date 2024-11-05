@@ -1,15 +1,24 @@
 <script setup lang="ts">
 import Api from '@/api';
-import type { Transaction } from '@/types/Transaction';
+import type { Transaction, TransactionsFilter } from '@/types/Transaction';
 import { ref } from 'vue';
-import { onBeforeRouteUpdate, useRouter } from 'vue-router';
+import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router';
 
+const route = useRoute();
 const router = useRouter()
 
 const resultItens = ref<Transaction[]>([]);
 
 async function loadTransactions() {
-    resultItens.value = await Api.transactions.list(1, 100);
+    const filter: TransactionsFilter = {
+        year: route.query.year ? Number(route.query.year) : undefined,
+        month: route.query.month ? Number(route.query.month) : undefined,
+        categoryId: route.query.categoryId ? Number(route.query.categoryId) : undefined
+    }
+
+    console.log(route.query);
+    console.log(router.currentRoute.value.query);
+    resultItens.value = await Api.transactions.list(1, 100, filter);
 }
 
 onBeforeRouteUpdate((to, from) => {

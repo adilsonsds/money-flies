@@ -2,7 +2,6 @@ export type SummaryFilter = {
   year?: number
   month?: number
   categoryId?: number
-  payerId?: number
 }
 
 export type Summary = {
@@ -13,4 +12,9 @@ export type Summary = {
     id: number
     name: string
   }
+}
+
+export type SummaryPeriod = {
+  year: number
+  month: number
 }

@@ -3,11 +3,10 @@ import { useCategoryStore } from '@/stores/CategoryStore'
 import { useSummaryStore } from '@/stores/SummaryStore'
 import type { SummaryFilter } from '@/types/Summary'
 
-const { getTotal } = useSummaryStore()
+const { getTotal, listPeriods } = useSummaryStore()
 const { categories } = useCategoryStore()
 
-const year = new Date().getFullYear()
-const months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+const periods = listPeriods()
 
 const getFormatedTotal = (filter: SummaryFilter) => {
   return getTotal(filter).toLocaleString('pt-BR', {
@@ -29,8 +28,8 @@ const getFormatedTotal = (filter: SummaryFilter) => {
       <thead>
         <tr>
           <th>Category</th>
-          <th v-for="month in months" :key="month" style="width: 75px">
-            {{ month }}/{{ year }}
+          <th v-for="(period, index) in periods" :key="index" style="width: 75px">
+            {{ period.month }}/{{ period.year }}
           </th>
           <th style="width: 75px">Sum</th>
         </tr>
@@ -38,16 +37,16 @@ const getFormatedTotal = (filter: SummaryFilter) => {
       <tbody>
         <tr v-for="category in categories" :key="category.id">
           <td>{{ category.name }}</td>
-          <td v-for="month in months" :key="month" class="text-right">
+          <td v-for="(period, index) in periods" :key="index" class="text-right">
             <RouterLink :to="{
               name: 'transactions',
               query: {
                 categoryId: category.id,
-                month,
-                year
+                month: period.month,
+                year: period.year
               }
             }">
-              {{ getFormatedTotal({ year, month, categoryId: category.id }) }}
+              {{ getFormatedTotal({ year: period.year, month: period.month, categoryId: category.id }) }}
             </RouterLink>
           </td>
           <td class="text-right">
@@ -58,15 +57,15 @@ const getFormatedTotal = (filter: SummaryFilter) => {
       <tfoot>
         <tr>
           <td>Total</td>
-          <td v-for="month in months" :key="month" class="text-right">
+          <td v-for="(period, index) in periods" :key="index" class="text-right">
             <RouterLink :to="{
               name: 'transactions',
               query: {
-                year,
-                month
+                month: period.month,
+                year: period.year
               }
             }">
-              {{ getFormatedTotal({ year, month }) }}
+              {{ getFormatedTotal({ year: period.year, month: period.month }) }}
             </RouterLink>
           </td>
           <td></td>

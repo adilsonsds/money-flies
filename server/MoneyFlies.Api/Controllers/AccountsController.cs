@@ -15,7 +15,7 @@ public class AccountsController(IRepository<Account> repository) : ControllerBas
     public async Task<IActionResult> Get()
     {
         var accounts = await _repository.ListAsync();
-        return Ok(accounts.Select(a => new { a.Id, a.Name }).ToList());
+        return Ok(accounts.Select(a => new { a.Id, a.Name }).OrderBy(a => a.Name).ToList());
     }
 
     [HttpPost]
