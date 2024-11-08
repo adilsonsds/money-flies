@@ -1,5 +1,6 @@
 import type {
   Account,
+  RegisterAccount,
   RegisterTransaction,
   Transaction,
   TransactionsFilter
@@ -133,6 +134,9 @@ const Api = {
   accounts: {
     list: async () => {
       return await getList<Account>(`${BASE_API_URL}/accounts`)
+    },
+    create: async (account: RegisterAccount) => {
+      return await post<void>(`${BASE_API_URL}/accounts`, account)
     }
   }
 }

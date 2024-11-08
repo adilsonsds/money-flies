@@ -3,6 +3,10 @@ export type Account = {
   name: string
 }
 
+export type RegisterAccount = {
+  name: string
+}
+
 export type Category = {
   id: number
   name: string
