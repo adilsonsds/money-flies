@@ -1,15 +1,13 @@
 namespace MoneyFlies.Domain.Repositories.DTO;
 
-public record SummaryDTO
-{
-    public int Year { get; set; }
-    public int Month { get; set; }
-    public CategorySummaryDTO Category { get; set; }
-    public decimal TotalAmount { get; set; }
+public record SummaryDTO(
+    int Year,
+    int Month,
+    CategorySummaryDTO Category,
+    AccountSummaryDTO AccountFrom,
+    AccountSummaryDTO AccountTo,
+    decimal TotalAmount);
 
-    public record CategorySummaryDTO
-    {
-        public int Id { get; init; }
-        public string Name { get; init; }
-    }
-}
+public record CategorySummaryDTO(int Id, string Name);
+
+public record AccountSummaryDTO(int Id, string Name);

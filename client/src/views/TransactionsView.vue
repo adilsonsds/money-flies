@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Api from '@/api';
-import type { Transaction, TransactionsFilter } from '@/types/Transaction';
+import type { SummaryFilter } from '@/types/Summary';
+import type { Transaction } from '@/types/Transaction';
 import { ref } from 'vue';
 import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router';
 
@@ -10,10 +11,11 @@ const router = useRouter()
 const resultItens = ref<Transaction[]>([]);
 
 async function loadTransactions() {
-    const filter: TransactionsFilter = {
+    const filter: SummaryFilter = {
         year: route.query.year ? Number(route.query.year) : undefined,
         month: route.query.month ? Number(route.query.month) : undefined,
-        categoryId: route.query.categoryId ? Number(route.query.categoryId) : undefined
+        categoryId: route.query.categoryId ? Number(route.query.categoryId) : undefined,
+        accountId: route.query.accountId ? Number(route.query.accountId) : undefined
     }
 
     console.log(route.query);

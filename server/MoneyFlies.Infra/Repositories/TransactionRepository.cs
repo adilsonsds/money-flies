@@ -26,6 +26,11 @@ internal class TransactionRepository(MoneyFliesContext context) : Repository<Tra
             transactions = transactions.Where(t => t.Category.Id == filter.CategoryId.Value);
         }
 
+        if (filter.AccountId.HasValue)
+        {
+            transactions = transactions.Where(t => t.From.Id == filter.AccountId.Value || t.To.Id == filter.AccountId.Value);
+        }
+
         var result = await transactions
             .OrderByDescending(t => t.Id)
             .Skip((filter.Page - 1) * filter.PageSize).Take(filter.PageSize)
@@ -38,18 +43,25 @@ internal class TransactionRepository(MoneyFliesContext context) : Repository<Tra
     public async Task<List<SummaryDTO>> ListSummaryAsync()
     {
         var result = await _entities
-            .GroupBy(t => new { t.Date.Year, t.Date.Month, t.Category.Id })
-            .Select(g => new SummaryDTO
+            .GroupBy(t => new
             {
-                Year = g.Key.Year,
-                Month = g.Key.Month,
-                Category = new SummaryDTO.CategorySummaryDTO
-                {
-                    Id = g.Key.Id,
-                    Name = g.First().Category.Name
-                },
-                TotalAmount = g.Sum(t => t.Amount)
+                t.Date.Year,
+                t.Date.Month,
+                CategoryId = t.Category.Id,
+                AccountFromId = t.From.Id,
+                AccountToId = t.To.Id,
+                CategoryName = t.Category.Name,
+                AccountFromName = t.From.Name,
+                AccountToName = t.To.Name
             })
+            .Select(g => new SummaryDTO(
+                g.Key.Year,
+                g.Key.Month,
+                new CategorySummaryDTO(g.Key.CategoryId, g.Key.CategoryName),
+                new AccountSummaryDTO(g.Key.AccountFromId, g.Key.AccountFromName),
+                new AccountSummaryDTO(g.Key.AccountToId, g.Key.AccountToName),
+                g.Sum(t => t.Amount)
+            ))
             .ToListAsync();
 
         return result;

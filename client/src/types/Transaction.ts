@@ -37,4 +37,5 @@ export type TransactionsFilter = {
   year?: number
   month?: number
   categoryId?: number
+  accountId?: number
 }

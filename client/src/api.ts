@@ -2,10 +2,9 @@ import type {
   Account,
   RegisterAccount,
   RegisterTransaction,
-  Transaction,
-  TransactionsFilter
+  Transaction
 } from './types/Transaction'
-import type { Summary } from './types/Summary'
+import type { Summary, SummaryFilter } from './types/Summary'
 
 const post = async <T>(url: string, data: any): Promise<T | null> => {
   try {
@@ -99,7 +98,7 @@ const Api = {
     }
   },
   transactions: {
-    list: async (page: number, pageSize: number, filter: TransactionsFilter) => {
+    list: async (page: number, pageSize: number, filter: SummaryFilter) => {
       const url = new URL(`${BASE_API_URL}/transactions`)
       url.searchParams.set('page', page.toString())
       url.searchParams.set('pageSize', pageSize.toString())
@@ -114,6 +113,10 @@ const Api = {
 
       if (filter.categoryId) {
         url.searchParams.set('categoryId', filter.categoryId.toString())
+      }
+
+      if (filter.accountId) {
+        url.searchParams.set('accountId', filter.accountId.toString())
       }
 
       return await getList<Transaction>(url.toString())

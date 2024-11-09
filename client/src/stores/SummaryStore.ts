@@ -13,16 +13,19 @@ export const useSummaryStore = defineStore('summaries', () => {
     localStorage.setItem(LOCALSTORAGE_NAME, JSON.stringify(summaries.value))
   }
 
-  function getTotal({ year, month, categoryId }: SummaryFilter): number {
+  function getTotal({ year, month, categoryId, accountId }: SummaryFilter): number {
     let total = 0
 
     for (const summary of summaries.value) {
       if (
         (!year || summary.year === year) &&
         (!month || summary.month === month) &&
-        (!categoryId || summary.category.id === categoryId)
+        (!categoryId || summary.category.id === categoryId) &&
+        (!accountId || summary.accountFrom.id === accountId || summary.accountTo.id === accountId)
       ) {
-        total += summary.totalAmount
+        if (accountId && accountId > 0 && summary.accountTo.id === accountId)
+          total -= summary.totalAmount
+        else total += summary.totalAmount
       }
     }
 

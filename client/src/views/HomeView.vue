@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { useAccountStore } from '@/stores/AccountStore';
 import { useCategoryStore } from '@/stores/CategoryStore'
 import { useSummaryStore } from '@/stores/SummaryStore'
 import type { SummaryFilter } from '@/types/Summary'
 
 const { getTotal, listPeriods } = useSummaryStore()
 const { categories } = useCategoryStore()
+const { accounts } = useAccountStore()
 
 const periods = listPeriods()
 
@@ -54,8 +56,6 @@ const getFormatedTotal = (filter: SummaryFilter) => {
             {{ getFormatedTotal({ categoryId: category.id }) }}
           </td>
         </tr>
-      </tbody>
-      <tfoot>
         <tr>
           <td>Total</td>
           <td v-for="(period, index) in periods" :key="index" class="text-right">
@@ -71,7 +71,25 @@ const getFormatedTotal = (filter: SummaryFilter) => {
           </td>
           <td></td>
         </tr>
-      </tfoot>
+        <tr v-for="account in accounts" :key="account.id">
+          <td>{{ account.name }}</td>
+          <td v-for="(period, index) in periods" :key="index" class="text-right">
+            <RouterLink :to="{
+              name: 'transactions',
+              query: {
+                accountId: account.id,
+                month: period.month,
+                year: period.year
+              }
+            }">
+              {{ getFormatedTotal({ year: period.year, month: period.month, accountId: account.id }) }}
+            </RouterLink>
+          </td>
+          <td class="text-right">
+            {{ getFormatedTotal({ accountId: account.id }) }}
+          </td>
+        </tr>
+      </tbody>
     </table>
   </main>
 </template>
