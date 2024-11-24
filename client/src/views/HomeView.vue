@@ -30,7 +30,7 @@ const getFormatedTotal = (filter: SummaryFilter) => {
     <table>
       <thead>
         <tr>
-          <th>Category</th>
+          <th>#</th>
           <th v-for="(period, index) in periods" :key="index" style="width: 75px">
             {{ period.month }}/{{ period.year }}
           </th>
@@ -38,6 +38,11 @@ const getFormatedTotal = (filter: SummaryFilter) => {
         </tr>
       </thead>
       <tbody>
+        <tr>
+          <td colspan="14">
+            Categorias
+          </td>
+        </tr>
         <tr v-for="category in categories" :key="category.id">
           <td>{{ category.name }}</td>
           <td v-for="(period, index) in periods" :key="index" class="text-right">
@@ -70,6 +75,11 @@ const getFormatedTotal = (filter: SummaryFilter) => {
             </RouterLink>
           </td>
           <td></td>
+        </tr>
+        <tr>
+          <td colspan="14">
+            Contas
+          </td>
         </tr>
         <tr v-for="account in accounts" :key="account.id">
           <td>{{ account.name }}</td>
