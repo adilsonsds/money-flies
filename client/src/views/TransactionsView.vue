@@ -2,7 +2,7 @@
 import Api from '@/api';
 import type { SummaryFilter } from '@/types/Summary';
 import type { Transaction } from '@/types/Transaction';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
@@ -10,6 +10,10 @@ const router = useRouter()
 
 const resultItens = ref<Transaction[]>([]);
 const filterText = ref('');
+
+const amountSum = computed(() => {
+    return resultItens.value.reduce((acc, item) => acc + item.amount, 0);
+});
 
 async function loadTransactions() {
     const filter: SummaryFilter = {
@@ -86,6 +90,20 @@ loadTransactions();
                 </td>
             </tr>
         </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2"></td>
+                <td class="text-right">
+                    {{
+                        amountSum.toLocaleString('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL'
+                        })
+                    }}
+                </td>
+                <td colspan="5"></td>
+            </tr>
+        </tfoot>
     </table>
     <RouterView />
 </template>
