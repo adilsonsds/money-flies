@@ -3,6 +3,7 @@ export type SummaryFilter = {
   month?: number
   categoryId?: number
   accountId?: number
+  contentText?: string
 }
 
 export type Summary = {

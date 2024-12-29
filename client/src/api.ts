@@ -119,6 +119,10 @@ const Api = {
         url.searchParams.set('accountId', filter.accountId.toString())
       }
 
+      if (filter.contentText) {
+        url.searchParams.set('contentText', filter.contentText)
+      }
+
       return await getList<Transaction>(url.toString())
     },
     create: async (transaction: RegisterTransaction) => {

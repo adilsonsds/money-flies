@@ -31,6 +31,17 @@ internal class TransactionRepository(MoneyFliesContext context) : Repository<Tra
             transactions = transactions.Where(t => t.From.Id == filter.AccountId.Value || t.To.Id == filter.AccountId.Value);
         }
 
+        if (!string.IsNullOrWhiteSpace(filter.ContentText))
+        {
+            var contentTextLower = filter.ContentText.ToLower();
+
+            transactions = transactions.Where(t =>
+                t.Description.ToLower().Contains(contentTextLower) ||
+                t.Category.Name.ToLower().Contains(contentTextLower) ||
+                t.From.Name.ToLower().Contains(contentTextLower) ||
+                t.To.Name.ToLower().Contains(contentTextLower));
+        }
+
         var result = await transactions
             .OrderByDescending(t => t.Id)
             .Skip((filter.Page - 1) * filter.PageSize).Take(filter.PageSize)

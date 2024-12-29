@@ -9,18 +9,24 @@ const route = useRoute();
 const router = useRouter()
 
 const resultItens = ref<Transaction[]>([]);
+const filterText = ref('');
 
 async function loadTransactions() {
     const filter: SummaryFilter = {
         year: route.query.year ? Number(route.query.year) : undefined,
         month: route.query.month ? Number(route.query.month) : undefined,
         categoryId: route.query.categoryId ? Number(route.query.categoryId) : undefined,
-        accountId: route.query.accountId ? Number(route.query.accountId) : undefined
+        accountId: route.query.accountId ? Number(route.query.accountId) : undefined,
+        contentText: filterText.value
     }
 
     console.log(route.query);
     console.log(router.currentRoute.value.query);
     resultItens.value = await Api.transactions.list(1, 100, filter);
+}
+
+function applyFilter() {
+    loadTransactions();
 }
 
 onBeforeRouteUpdate((to, from) => {
@@ -36,6 +42,12 @@ loadTransactions();
     <h1>TransactionsView</h1>
     <button @click="router.go(-1)" style="margin: 10px 0 20px">Voltar</button>
     <RouterLink to="/transactions/new">Nova Transação</RouterLink>
+
+    <form @submit.prevent="applyFilter" style="margin: 20px 0">
+        <input type="text" v-model="filterText" placeholder="Filter transactions" />
+        <button type="submit">Filter</button>
+    </form>
+
     <table>
         <thead>
             <tr>
