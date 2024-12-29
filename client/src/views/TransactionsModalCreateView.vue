@@ -15,6 +15,7 @@ const router = useRouter()
 const { categories } = useCategoryStore()
 const { accounts } = useAccountStore()
 const date = ref<string>(lastTransaction.date || new Date().toLocaleDateString('en-CA'))
+const previousDate = ref<string | null>(null)
 const amount = ref(0)
 const categoryId = ref<number | null>(null)
 const paid = ref<boolean | string>(false)
@@ -50,6 +51,7 @@ async function loadTransaction(transactionId: string) {
         return
     }
 
+    previousDate.value = date.value
     date.value = transaction.date
     amount.value = transaction.amount
     categoryId.value = transaction.category.id
@@ -78,6 +80,13 @@ function incrementMonth(date: string): string {
     return dateObject.toLocaleDateString('en-CA');
 }
 
+function incrementDay(date: string): string {
+    const parts = date.split('-');
+    const dateObject = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    dateObject.setDate(dateObject.getDate() + 1);
+    return dateObject.toLocaleDateString('en-CA');
+}
+
 function changeAccounts() {
     const temp = accountFromId.value
     accountFromId.value = accountToId.value
@@ -94,7 +103,11 @@ function changeAccounts() {
                 <div class="form-group">
                     <label for="date">Data:</label>
                     <input id="date" type="date" v-model="date" />
-                    <button type="button" @click="date = incrementMonth(date)" class="link">Próximo mês</button>
+                    <button type="button" @click="date = previousDate" class="link" v-if="previousDate">
+                        {{ previousDate }}
+                    </button>
+                    <button type="button" @click="date = incrementDay(date)" class="link">+1 dia</button>
+                    <button type="button" @click="date = incrementMonth(date)" class="link">+1 mês</button>
                 </div>
                 <div class="form-group">
                     <label for="amount">Valor:</label>
@@ -184,5 +197,6 @@ function changeAccounts() {
     text-decoration: underline;
     cursor: pointer;
     padding: 0;
+    margin-right: 10px;
 }
 </style>
