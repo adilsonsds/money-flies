@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { useAccountStore } from '@/stores/AccountStore';
 import { useCategoryStore } from '@/stores/CategoryStore'
 import { useSummaryStore } from '@/stores/SummaryStore'
-import type { SummaryFilter } from '@/types/Summary'
+import type { SummaryFilter, SummaryPeriod } from '@/types/Summary'
+import type { Category } from '@/types/Transaction';
+import { ref } from 'vue';
 
 const { getTotal, listPeriods } = useSummaryStore()
 const { categories } = useCategoryStore()
-const { accounts } = useAccountStore()
 
 const periods = listPeriods()
 
@@ -17,6 +17,90 @@ const getFormatedTotal = (filter: SummaryFilter) => {
   }).replace('R$', '')
 }
 
+enum SummaryType {
+  Inflow = 'inflow',
+  Outflow = 'outflow',
+  NotIdentified = 'notIdentified'
+}
+
+type CategoryGroup = {
+  id: number
+  name: string
+  type: SummaryType
+  inflowsCategories: Category[]
+  outflowsCategories: Category[]
+}
+
+const groups = ref<CategoryGroup[]>([])
+
+function addGroup(name: string, type: SummaryType, inflows: string[], outflows: string[]) {
+
+  var inflowsCategories = categories.filter(c => inflows.includes(c.name))
+  var outflowsCategories = categories.filter(c => outflows.includes(c.name))
+
+  var nextId = groups.value.length + 1
+
+  groups.value.push({
+    id: nextId,
+    name,
+    type,
+    inflowsCategories: inflowsCategories || [],
+    outflowsCategories: outflowsCategories || []
+  })
+}
+
+addGroup('Despesas domésticas', SummaryType.Outflow, ['Aluguel', 'Gás', 'Luz', 'Internet', 'Água', 'Petshop'], ['Ajuda de custo'])
+addGroup('Alimentação', SummaryType.Outflow, ['Mercado', 'Restaurantes', 'Lanches'], [])
+addGroup('Transporte', SummaryType.Outflow, ['Uber, 99 e Táxis', 'Ônibus e metrô'], [])
+addGroup('Carreira e Educação', SummaryType.Outflow, ['Cursos', 'Livros', 'Papelaria'], [])
+addGroup('Receitas', SummaryType.Inflow, ['Salário', 'Rendimentos'], [])
+addGroup('Financiamentos', SummaryType.Outflow, ['Financiamentos'], [])
+addGroup('Estilo de Vida', SummaryType.Outflow, ['Assinaturas', 'Celular', 'Compras', 'Presentes', 'Viagens'], [])
+addGroup('Saúde e Bem-estar', SummaryType.Outflow, ['Dentista', 'Farmácia', 'Barbearia'], [])
+
+var categoriesWithoutGroup = categories.filter(c => !groups.value.some(g => g.inflowsCategories.includes(c) || g.outflowsCategories.includes(c)))
+addGroup('Outros', SummaryType.NotIdentified, categoriesWithoutGroup.map(c => c.name), [])
+
+function getCategoryGroupTotal(group: CategoryGroup, period: SummaryPeriod): number {
+  var total = 0
+
+  group.inflowsCategories.forEach(category => {
+    total += getTotal({ year: period.year, month: period.month, categoryId: category.id })
+  })
+
+  group.outflowsCategories.forEach(category => {
+    total -= getTotal({ year: period.year, month: period.month, categoryId: category.id })
+  })
+
+  return total
+}
+
+function getCategoryGroupTotalFormated(group: CategoryGroup, period: SummaryPeriod): string {
+  return getCategoryGroupTotal(group, period).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).replace('R$', '')
+}
+
+function getSummaryTotalFormated(period: SummaryPeriod): string {
+  var total = 0
+
+  groups.value.forEach(group => {
+    if (group.type === SummaryType.Inflow)
+      total += getCategoryGroupTotal(group, period)
+    else if (group.type === SummaryType.Outflow)
+      total -= getCategoryGroupTotal(group, period)
+  })
+
+  return total.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).replace('R$', '')
+}
+
+function getVisibleCategoriesGroupsInSummary(): CategoryGroup[] {
+  return groups.value.filter(group => group.type !== SummaryType.NotIdentified)
+}
 </script>
 
 <template>
@@ -27,79 +111,88 @@ const getFormatedTotal = (filter: SummaryFilter) => {
       <RouterLink class="header-links__item" to="/categories">Categorias</RouterLink>
       <RouterLink class="header-links__item" to="/accounts">Contas</RouterLink>
     </div>
+
     <table>
-      <thead>
+
+      <tr>
+        <td>Resumo</td>
+        <td v-for="(period, index) in periods" :key="index" class="text-right">
+          {{ period.month }}/{{ period.year.toString().slice(-2) }}
+        </td>
+      </tr>
+
+      <tr v-for="group in getVisibleCategoriesGroupsInSummary()" :key="group.id">
+        <td>{{ group.name }}</td>
+        <td v-for="(period, index) in periods" :key="index" class="text-right">
+          <a :href="`#${group.id}-${period.year}-${period.month}`">
+            {{ getCategoryGroupTotalFormated(group, { year: period.year, month: period.month }) }}
+          </a>
+        </td>
+      </tr>
+
+      <tr>
+        <td>Total</td>
+        <td v-for="(period, index) in periods" :key="index" class="text-right">
+          {{ getSummaryTotalFormated({ year: period.year, month: period.month }) }}
+        </td>
+      </tr>
+
+      <template v-for="group in groups" :key="group.id">
         <tr>
-          <th>#</th>
-          <th v-for="(period, index) in periods" :key="index" style="width: 75px">
-            {{ period.month }}/{{ period.year }}
-          </th>
-          <th style="width: 75px">Sum</th>
+          <td colspan="14" style="border: none;height: 45px;"></td>
         </tr>
-      </thead>
-      <tbody>
         <tr>
-          <td colspan="14">
-            Categorias
+          <td>{{ group.name }}</td>
+          <td v-for="(period, index) in periods" :key="index" :id="`${group.id}-${period.year}-${period.month}`"
+            class="text-right">
+            {{ period.month }}/{{ period.year.toString().slice(-2) }}
           </td>
         </tr>
-        <tr v-for="category in categories" :key="category.id">
-          <td>{{ category.name }}</td>
-          <td v-for="(period, index) in periods" :key="index" class="text-right">
-            <RouterLink :to="{
-              name: 'transactions',
-              query: {
-                categoryId: category.id,
-                month: period.month,
-                year: period.year
-              }
-            }">
-              {{ getFormatedTotal({ year: period.year, month: period.month, categoryId: category.id }) }}
-            </RouterLink>
-          </td>
-          <td class="text-right">
-            {{ getFormatedTotal({ categoryId: category.id }) }}
-          </td>
-        </tr>
+        <template v-for="category in group.inflowsCategories" :key="category.id">
+          <tr>
+            <td>{{ category.name }}</td>
+            <td v-for="(period, index) in periods" :key="index" class="text-right">
+              <RouterLink :to="{
+                name: 'transactions',
+                query: {
+                  categoryId: category.id,
+                  month: period.month,
+                  year: period.year
+                }
+              }">
+                {{ getFormatedTotal({
+                  year: period.year, month: period.month, categoryId: category.id
+                }) }}
+              </RouterLink>
+            </td>
+          </tr>
+        </template>
+        <template v-for="category in group.outflowsCategories" :key="category.id">
+          <tr>
+            <td>{{ category.name }}</td>
+            <td v-for="(period, index) in periods" :key="index" class="text-right">
+              <RouterLink :to="{
+                name: 'transactions',
+                query: {
+                  categoryId: category.id,
+                  month: period.month,
+                  year: period.year
+                }
+              }">
+                {{ getFormatedTotal({
+                  year: period.year, month: period.month, categoryId: category.id
+                }) }}
+              </RouterLink>
+            </td>
+          </tr>
+        </template>
         <tr>
           <td>Total</td>
           <td v-for="(period, index) in periods" :key="index" class="text-right">
-            <RouterLink :to="{
-              name: 'transactions',
-              query: {
-                month: period.month,
-                year: period.year
-              }
-            }">
-              {{ getFormatedTotal({ year: period.year, month: period.month }) }}
-            </RouterLink>
-          </td>
-          <td></td>
-        </tr>
-        <tr>
-          <td colspan="14">
-            Contas
+            {{ getCategoryGroupTotalFormated(group, { year: period.year, month: period.month }) }}
           </td>
         </tr>
-        <tr v-for="account in accounts" :key="account.id">
-          <td>{{ account.name }}</td>
-          <td v-for="(period, index) in periods" :key="index" class="text-right">
-            <RouterLink :to="{
-              name: 'transactions',
-              query: {
-                accountId: account.id,
-                month: period.month,
-                year: period.year
-              }
-            }">
-              {{ getFormatedTotal({ year: period.year, month: period.month, accountId: account.id }) }}
-            </RouterLink>
-          </td>
-          <td class="text-right">
-            {{ getFormatedTotal({ accountId: account.id }) }}
-          </td>
-        </tr>
-      </tbody>
+      </template>
     </table>
   </main>
 </template>
