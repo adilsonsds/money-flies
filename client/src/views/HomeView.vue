@@ -11,7 +11,11 @@ const { categories } = useCategoryStore()
 const periods = listPeriods()
 
 const getFormatedTotal = (filter: SummaryFilter) => {
-  return getTotal(filter).toLocaleString('pt-BR', {
+  return getFormatedValue(getTotal(filter))
+}
+
+const getFormatedValue = (value: number) => {
+  return value.toLocaleString('pt-BR', {
     style: 'currency',
     currency: 'BRL'
   }).replace('R$', '')
@@ -83,19 +87,26 @@ function getCategoryGroupTotalFormated(group: CategoryGroup, period: SummaryPeri
 }
 
 function getSummaryTotalFormated(period: SummaryPeriod): string {
-  var total = 0
+  var inflowTotal = getSummaryTotalByType(SummaryType.Inflow, period)
+  var outflowTotal = getSummaryTotalByType(SummaryType.Outflow, period)
 
-  groups.value.forEach(group => {
-    if (group.type === SummaryType.Inflow)
-      total += getCategoryGroupTotal(group, period)
-    else if (group.type === SummaryType.Outflow)
-      total -= getCategoryGroupTotal(group, period)
-  })
+  var total = inflowTotal - outflowTotal
 
   return total.toLocaleString('pt-BR', {
     style: 'currency',
     currency: 'BRL'
   }).replace('R$', '')
+}
+
+function getSummaryTotalByType(type: SummaryType, period: SummaryPeriod): number {
+  var total = 0
+
+  groups.value.forEach(group => {
+    if (group.type === type)
+      total += getCategoryGroupTotal(group, period)
+  })
+
+  return total
 }
 
 function getVisibleCategoriesGroupsInSummary(): CategoryGroup[] {
@@ -134,6 +145,20 @@ function getVisibleCategoriesGroupsInSummary(): CategoryGroup[] {
         <td>Total</td>
         <td v-for="(period, index) in periods" :key="index" class="text-right">
           {{ getSummaryTotalFormated({ year: period.year, month: period.month }) }}
+        </td>
+      </tr>
+
+      <tr>
+        <td>Entradas</td>
+        <td v-for="(period, index) in periods" :key="index" class="text-right">
+          {{ getFormatedValue(getSummaryTotalByType(SummaryType.Inflow, { year: period.year, month: period.month })) }}
+        </td>
+      </tr>
+
+      <tr>
+        <td>Saídas</td>
+        <td v-for="(period, index) in periods" :key="index" class="text-right">
+          {{ getFormatedValue(getSummaryTotalByType(SummaryType.Outflow, { year: period.year, month: period.month })) }}
         </td>
       </tr>
 
