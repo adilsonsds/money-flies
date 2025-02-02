@@ -23,9 +23,10 @@ export const useSummaryStore = defineStore('summaries', () => {
         (!categoryId || summary.category.id === categoryId) &&
         (!accountId || summary.accountFrom.id === accountId || summary.accountTo.id === accountId)
       ) {
-        if (accountId && accountId > 0 && summary.accountTo.id === accountId)
-          total -= summary.totalAmount
-        else total += summary.totalAmount
+        // if (accountId && accountId > 0 && summary.accountTo.id === accountId)
+        //   total -= summary.totalAmount
+        // else
+        total += summary.totalAmount
       }
     }
 

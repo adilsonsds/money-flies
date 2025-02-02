@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { useCategoryStore } from '@/stores/CategoryStore'
 import { useSummaryStore } from '@/stores/SummaryStore'
+import { useAccountStore } from '@/stores/AccountStore'
 import type { SummaryFilter, SummaryPeriod } from '@/types/Summary'
 import type { Category } from '@/types/Transaction';
 import { ref } from 'vue';
 
 const { getTotal, listPeriods } = useSummaryStore()
 const { categories } = useCategoryStore()
+const { accounts } = useAccountStore()
 
 const periods = listPeriods()
 
@@ -34,6 +36,8 @@ type CategoryGroup = {
   inflowsCategories: Category[]
   outflowsCategories: Category[]
 }
+
+const selectedAccountId = ref<number>(1)
 
 const groups = ref<CategoryGroup[]>([])
 
@@ -69,11 +73,11 @@ function getCategoryGroupTotal(group: CategoryGroup, period: SummaryPeriod): num
   var total = 0
 
   group.inflowsCategories.forEach(category => {
-    total += getTotal({ year: period.year, month: period.month, categoryId: category.id })
+    total += getTotal({ year: period.year, month: period.month, categoryId: category.id, accountId: selectedAccountId.value })
   })
 
   group.outflowsCategories.forEach(category => {
-    total -= getTotal({ year: period.year, month: period.month, categoryId: category.id })
+    total -= getTotal({ year: period.year, month: period.month, categoryId: category.id, accountId: selectedAccountId.value })
   })
 
   return total
@@ -121,6 +125,14 @@ function getVisibleCategoriesGroupsInSummary(): CategoryGroup[] {
       <RouterLink class="header-links__item" to="/transactions">Lançamentos recentes</RouterLink>
       <RouterLink class="header-links__item" to="/categories">Categorias</RouterLink>
       <RouterLink class="header-links__item" to="/accounts">Contas</RouterLink>
+    </div>
+
+    <div>
+      <select v-model="selectedAccountId">
+        <option v-for="account in accounts" :key="account.id" :value="account.id">
+          {{ account.name }}
+        </option>
+      </select>
     </div>
 
     <table>
