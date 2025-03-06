@@ -1,5 +1,15 @@
 services:
-  mf_api:
+  app:
+    build:
+      context: ./app
+    ports:
+      - "5132:8080"
+    networks:
+      - mf_db_network
+    volumes:
+      - ./data:/app/data
+
+  mf_api_old:
     build:
       context: ./server
     ports:
