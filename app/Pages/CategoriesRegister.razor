@@ -4,12 +4,12 @@
 @using app.Models
 @inject AppDbContext Db
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 
 @code {
     [Parameter]
     public int? Id { get; set; }
-    private CreateCategoryModel model = new();
-    private string? successMessage;
+    private CategoriesRegisterModel model = new();
     private List<int> subcategoriesIdsBeingUsed = new();
     private string PageTitle => Id.HasValue ? "Editar Categoria" : "Nova Categoria";
 
@@ -18,11 +18,15 @@
         if (Id.HasValue)
         {
             var category = await Db.Categories.Include(c => c.SubCategories).SingleOrDefaultAsync(c => c.Id.Equals(Id.Value));
-            if (category != null)
+            if (category is not null)
             {
                 model = category.ToModel();
                 subcategoriesIdsBeingUsed = Db.FinancialTransactions.Where(t => t.Category.Id.Equals(Id.Value)).Select(t =>
                 t.SubCategory.Id).Distinct().ToList();
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/categories");
             }
         }
     }
@@ -31,13 +35,7 @@
     {
         if (Id.HasValue)
         {
-            var category = await Db.Categories.Include(c => c.SubCategories).SingleOrDefaultAsync(c => c.Id.Equals(Id.Value));
-            if (category is null)
-            {
-                successMessage = "Categoria não encontrada!";
-                return;
-            }
-
+            var category = await Db.Categories.Include(c => c.SubCategories).SingleAsync(c => c.Id.Equals(Id.Value));
             category.UpdateFromModel(model, subcategoriesIdsBeingUsed);
             Db.Categories.Update(category);
         }
@@ -48,34 +46,24 @@
         }
 
         await Db.SaveChangesAsync();
-        successMessage = Id.HasValue ? "Categoria atualizada com sucesso!" : "Categoria criada com sucesso!";
-
         NavigationManager.NavigateTo("/categories");
     }
 
     private async Task DeleteCategory()
     {
-        if (Id.HasValue)
+        var category = await Db.Categories.Include(c => c.SubCategories).SingleAsync(c => c.Id.Equals(Id!.Value));
+
+        var existsTransactions = await Db.FinancialTransactions.AnyAsync(t => t.Category.Id.Equals(category.Id));
+        if (existsTransactions)
         {
-            var category = await Db.Categories.Include(c => c.SubCategories).SingleOrDefaultAsync(c => c.Id.Equals(Id.Value));
-            if (category is null)
-            {
-                successMessage = "Categoria não encontrada!";
-                return;
-            }
-
-            var existsTransactions = await Db.FinancialTransactions.AnyAsync(t => t.Category.Id.Equals(Id.Value));
-            if (existsTransactions)
-            {
-                successMessage = "Não é possível excluir uma categoria que possui transações!";
-                return;
-            }
-
-            Db.Categories.Remove(category);
-            await Db.SaveChangesAsync();
-            successMessage = "Categoria removida com sucesso!";
-            NavigationManager.NavigateTo("/categories");
+            var message = "Não é possível excluir a categoria pois existem transações associadas a ela.";
+            await JSRuntime.InvokeVoidAsync("alert", message);
+            return;
         }
+
+        Db.Categories.Remove(category);
+        await Db.SaveChangesAsync();
+        NavigationManager.NavigateTo("/categories");
     }
 }
 
@@ -144,10 +132,3 @@
         </button>
     </div>
 </EditForm>
-
-@if (successMessage != null)
-{
-    <div class="alert alert-success mt-3">
-        @successMessage
-    </div>
-}

@@ -1,0 +1,111 @@
+@page "/transactions/register/{id:int?}"
+@using app.Data
+@using Microsoft.EntityFrameworkCore
+@using app.Models
+@inject AppDbContext Db
+@inject NavigationManager NavigationManager
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+    private TransactionsRegisterModel model = new();
+    private string PageTitle => Id.HasValue ? "Editar transação" : "Nova transação";
+    private List<KeyValuePair<int, string>> subcategories = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        subcategories = await Db.SubCategories
+        .Select(c => new KeyValuePair<int, string>(c.Id, c.Name))
+        .ToListAsync();
+
+        if (Id.HasValue)
+        {
+            var entity = await Db.FinancialTransactions.SingleOrDefaultAsync(c => c.Id.Equals(Id.Value));
+            if (entity is not null)
+            {
+                model = entity.ToModel();
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/transactions");
+            }
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var subCategory = await Db.SubCategories.Include(s => s.Category).SingleAsync(c => c.Id.Equals(model.SubCategoryId));
+
+        if (Id.HasValue)
+        {
+            var entity = await Db.FinancialTransactions.SingleAsync(c => c.Id.Equals(Id.Value));
+            entity.UpdateFromModel(model, subCategory);
+            Db.FinancialTransactions.Update(entity);
+        }
+        else
+        {
+            var entity = model.ToEntity(subCategory);
+            Db.FinancialTransactions.Add(entity);
+        }
+
+        await Db.SaveChangesAsync();
+        NavigationManager.NavigateTo("/transactions");
+    }
+
+    private async Task DeleteEntity()
+    {
+        var entity = await Db.FinancialTransactions.SingleAsync(c => c.Id.Equals(Id!.Value));
+
+        Db.FinancialTransactions.Remove(entity);
+        await Db.SaveChangesAsync();
+
+        NavigationManager.NavigateTo("/transactions");
+    }
+}
+
+<PageTitle>@PageTitle</PageTitle>
+
+<h1 class="text-left my-4">@PageTitle</h1>
+
+<EditForm Model="model" OnValidSubmit="HandleValidSubmit" class="container mb-3">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="date">Data</label>
+        <InputDate id="date" class="form-control" @bind-Value="model.Date" />
+    </div>
+
+    <div class="form-group">
+        <label for="value">Valor</label>
+        <InputNumber id="value" class="form-control" @bind-Value="model.Amount" />
+    </div>
+
+    <div class="form-group">
+        <label for="subcategory">Subcategoria</label>
+        <InputSelect id="subcategory" class="form-control" @bind-Value="model.SubCategoryId">
+            <option value="0">Selecione uma subcategoria</option>
+            @foreach (var item in subcategories)
+            {
+                <option value="@item.Key">@item.Value</option>
+            }
+        </InputSelect>
+    </div>
+
+    <div class="form-group">
+        <label for="description">Descrição</label>
+        <InputText id="description" class="form-control" @bind-Value="model.Description" />
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center my-4">
+        @if (Id.HasValue)
+        {
+            <button type="button" class="btn btn-danger" @onclick="DeleteEntity">
+                Excluir
+            </button>
+        }
+        <button type="submit" class="btn btn-primary">
+            Salvar
+        </button>
+    </div>
+</EditForm>

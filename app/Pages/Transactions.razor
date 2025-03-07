@@ -1,0 +1,58 @@
+@page "/transactions"
+@using app.Data
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext Db
+
+@code {
+    private FinancialTransaction[]? transactions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // TODO: baixa performance
+        transactions = await Db.FinancialTransactions
+        .Include(t => t.Category)
+        .Include(t => t.SubCategory)
+        .ToArrayAsync();
+    }
+}
+
+<PageTitle>Transações</PageTitle>
+
+<h1>Transações</h1>
+
+<a href="/transactions/register" class="btn btn-primary">Nova transação</a>
+
+@if (transactions == null)
+{
+    <p><em>Carregando...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Categoria</th>
+                <th>Descrição</th>
+                <th>Valor</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var transaction in transactions)
+            {
+                <tr>
+                    <td>@transaction.Date</td>
+                    <td>
+                        @transaction.Category.Name - @transaction.SubCategory.Name
+                    </td>
+                    <td>@transaction.Description</td>
+                    <td>@transaction.Amount</td>
+                    <td>
+                        <a href="/transactions/register/@transaction.Id" class="btn btn-secondary">Editar</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
