@@ -1,0 +1,153 @@
+@page "/category/register/{id:int?}"
+@using app.Data
+@using Microsoft.EntityFrameworkCore
+@using app.Models
+@inject AppDbContext Db
+@inject NavigationManager NavigationManager
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+    private CreateCategoryModel model = new();
+    private string? successMessage;
+    private List<int> subcategoriesIdsBeingUsed = new();
+    private string PageTitle => Id.HasValue ? "Editar Categoria" : "Nova Categoria";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id.HasValue)
+        {
+            var category = await Db.Categories.Include(c => c.SubCategories).SingleOrDefaultAsync(c => c.Id.Equals(Id.Value));
+            if (category != null)
+            {
+                model = category.ToModel();
+                subcategoriesIdsBeingUsed = Db.FinancialTransactions.Where(t => t.Category.Id.Equals(Id.Value)).Select(t =>
+                t.SubCategory.Id).Distinct().ToList();
+            }
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (Id.HasValue)
+        {
+            var category = await Db.Categories.Include(c => c.SubCategories).SingleOrDefaultAsync(c => c.Id.Equals(Id.Value));
+            if (category is null)
+            {
+                successMessage = "Categoria não encontrada!";
+                return;
+            }
+
+            category.UpdateFromModel(model, subcategoriesIdsBeingUsed);
+            Db.Categories.Update(category);
+        }
+        else
+        {
+            var category = model.ToEntity();
+            Db.Categories.Add(category);
+        }
+
+        await Db.SaveChangesAsync();
+        successMessage = Id.HasValue ? "Categoria atualizada com sucesso!" : "Categoria criada com sucesso!";
+
+        NavigationManager.NavigateTo("/categories");
+    }
+
+    private async Task DeleteCategory()
+    {
+        if (Id.HasValue)
+        {
+            var category = await Db.Categories.Include(c => c.SubCategories).SingleOrDefaultAsync(c => c.Id.Equals(Id.Value));
+            if (category is null)
+            {
+                successMessage = "Categoria não encontrada!";
+                return;
+            }
+
+            var existsTransactions = await Db.FinancialTransactions.AnyAsync(t => t.Category.Id.Equals(Id.Value));
+            if (existsTransactions)
+            {
+                successMessage = "Não é possível excluir uma categoria que possui transações!";
+                return;
+            }
+
+            Db.Categories.Remove(category);
+            await Db.SaveChangesAsync();
+            successMessage = "Categoria removida com sucesso!";
+            NavigationManager.NavigateTo("/categories");
+        }
+    }
+}
+
+<PageTitle>@PageTitle</PageTitle>
+
+<h1 class="text-left my-4">@PageTitle</h1>
+
+<EditForm Model="model" OnValidSubmit="HandleValidSubmit" class="container mb-3">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row mb-3">
+        <div class="col-lg-6 col-md-8 col-12">
+            <label for="name" class="form-label">Nome</label>
+            <InputText id="name" class="form-control" @bind-Value="model.Name" />
+            <ValidationMessage For="@(() => model.Name)" class="text-danger" />
+        </div>
+        <div class="col-12">
+            <label for="description" class="form-label">Descrição</label>
+            <InputTextArea id="description" class="form-control" @bind-Value="model.Description" />
+            <ValidationMessage For="@(() => model.Description)" class="text-danger" />
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center my-4">
+        <h2>Sub-categorias</h2>
+        <button type="button" class="btn btn-secondary" @onclick="() => model.AddEmptySubcategory()">
+            Adicionar
+        </button>
+    </div>
+
+    @foreach (var subcategory in model.Subcategories)
+    {
+        <div class="row mb-3">
+            <div class="col-lg-8 col-6">
+                <label for="@subcategory.Key" class="form-label">Nome</label>
+                <InputText id="@subcategory.Key" class="form-control" @bind-Value="subcategory.Name" />
+                <ValidationMessage For="@(() => subcategory.Name)" class="text-danger" />
+            </div>
+            <div class="col-lg-3 col-4">
+                <label class="form-label">Tipo</label>
+                <InputSelect class="form-select" @bind-Value="subcategory.UsedForRevenue">
+                    <option value="true">Receita</option>
+                    <option value="false">Despesa</option>
+                </InputSelect>
+                <ValidationMessage For="@(() => subcategory.UsedForRevenue)" class="text-danger" />
+            </div>
+            <div class="col-lg-1 col-2 d-flex align-items-end">
+                <button type="button" class="btn btn-danger" @onclick="() => model.Subcategories.Remove(subcategory)"
+                    disabled="@(subcategory.Id.HasValue && subcategoriesIdsBeingUsed.Contains(subcategory.Id.Value))">
+                    Remover
+                </button>
+            </div>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center my-4">
+        @if (Id.HasValue)
+        {
+            <button type="button" class="btn btn-danger" @onclick="DeleteCategory">
+                Excluir
+            </button>
+        }
+        <button type="submit" class="btn btn-primary">
+            Salvar
+        </button>
+    </div>
+</EditForm>
+
+@if (successMessage != null)
+{
+    <div class="alert alert-success mt-3">
+        @successMessage
+    </div>
+}

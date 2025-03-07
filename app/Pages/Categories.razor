@@ -16,6 +16,8 @@
 
 <h1>Categorias</h1>
 
+<a href="/category/register" class="btn btn-primary">Nova Categoria</a>
+
 @if (categories == null)
 {
     <p><em>Carregando...</em></p>
@@ -28,6 +30,7 @@ else
                 <th>ID</th>
                 <th>Name</th>
                 <th>Description</th>
+                <th>Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -37,6 +40,9 @@ else
                     <td>@category.Id</td>
                     <td>@category.Name</td>
                     <td>@category.Description</td>
+                    <td>
+                        <a href="/category/register/@category.Id" class="btn btn-secondary">Editar</a>
+                    </td>
                 </tr>
             }
         </tbody>
