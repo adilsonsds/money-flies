@@ -1,57 +1,8 @@
 services:
-  app:
+  mf_app:
     build:
       context: ./app
     ports:
       - "5132:8080"
-    networks:
-      - mf_db_network
     volumes:
       - ./data:/app/data
-
-  mf_api_old:
-    build:
-      context: ./server
-    ports:
-      - "5264:8080"
-    networks:
-      - mf_db_network
-
-  mf_vue:
-    build:
-      context: ./client
-    ports:
-      - "5173:80"
-
-  mf_db:
-    image: postgres:17.0
-    restart: always
-    environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=secret
-    ports:
-      - "5432:5432"
-    volumes:
-      - mf_db_data:/var/lib/postgresql/data
-    networks:
-      - mf_db_network
-
-  pgadmin:
-    image: dpage/pgadmin4:8
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@dev.io
-      PGADMIN_DEFAULT_PASSWORD: admin@dev.io
-    networks:
-      - mf_db_network
-    ports:
-      - "5050:80"
-    depends_on:
-      - mf_db
-
-volumes:
-  mf_db_data:
-
-networks:
-  mf_db_network:
-    driver: bridge
