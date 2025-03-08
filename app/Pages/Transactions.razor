@@ -4,15 +4,14 @@
 @inject AppDbContext Db
 
 @code {
-    private FinancialTransaction[]? transactions;
+    private IEnumerable<FinancialTransactionPayment> transactionPayments = Array.Empty<FinancialTransactionPayment>();
 
     protected override async Task OnInitializedAsync()
     {
-        // TODO: baixa performance
-        transactions = await Db.FinancialTransactions
-        .Include(t => t.Category)
-        .Include(t => t.SubCategory)
-        .ToArrayAsync();
+        transactionPayments = await Db.FinancialTransactionPayments
+        .Include(p => p.FinancialTransaction)
+        .OrderByDescending(p => p.Date)
+        .ToListAsync();
     }
 }
 
@@ -22,7 +21,7 @@
 
 <a href="/transactions/register" class="btn btn-primary">Nova transação</a>
 
-@if (transactions == null)
+@if (transactionPayments == null)
 {
     <p><em>Carregando...</em></p>
 }
@@ -31,28 +30,62 @@ else
     <table class="table">
         <thead>
             <tr>
-                <th>Data</th>
-                <th>Categoria</th>
-                <th>Descrição</th>
-                <th>Valor</th>
-                <th>Ações</th>
+                <th class="col-2 text-center">Registrado em</th>
+                <th class="col-2 text-center">Pagamento em</th>
+                <th class="col-4 text-left">Descrição</th>
+                <th class="col-1 text-center">Status</th>
+                <th class="col-2 text-right">Valor</th>
+                <th class="col-1 text-center">Ações</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var transaction in transactions)
+            @foreach (var transactionPayment in transactionPayments)
             {
                 <tr>
-                    <td>@transaction.Date</td>
-                    <td>
-                        @transaction.Category.Name - @transaction.SubCategory.Name
+                    <td class="text-center">
+                        @transactionPayment.FinancialTransaction.Date.ToString("dd/MM")
                     </td>
-                    <td>@transaction.Description</td>
-                    <td>@transaction.Amount</td>
-                    <td>
-                        <a href="/transactions/register/@transaction.Id" class="btn btn-secondary">Editar</a>
+                    <td class="text-center">
+                        @transactionPayment.Date.ToString("dd/MM")
+                    </td>
+                    <td class="text-left">
+                        <span>@transactionPayment.FinancialTransaction.Name</span>
+                        @if (!string.IsNullOrEmpty(transactionPayment.Observation))
+                        {
+                            <br />
+                            <small>@transactionPayment.Observation</small>
+                        }
+                    </td>
+                    <td class="text-center">
+                        @if (transactionPayment.Paid)
+                        {
+                            <span class="badge bg-success">Pago</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning">Pendente</span>
+                        }
+                    </td>
+                    <td class="text-right">
+                        @transactionPayment.Value.ToString("N2")
+                    </td>
+                    <td class="text-center">
+                        <a href="/transactions/register/@transactionPayment.FinancialTransaction.Id"
+                            class="btn btn-secondary">Editar</a>
+                        <a href="/transactions/register?copyBy=@transactionPayment.FinancialTransaction.Id"
+                            class="btn btn-secondary">Clonar
+                        </a>
                     </td>
                 </tr>
             }
         </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="5" class="text-right">
+                    @transactionPayments.Sum(t => t.Value)
+                </td>
+                <td></td>
+            </tr>
+        </tfoot>
     </table>
 }

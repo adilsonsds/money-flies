@@ -1,4 +1,5 @@
 @page "/transactions/register/{id:int?}"
+@using Microsoft.AspNetCore.WebUtilities
 @using app.Data
 @using Microsoft.EntityFrameworkCore
 @using app.Models
@@ -8,48 +9,70 @@
 @code {
     [Parameter]
     public int? Id { get; set; }
+    private int? copyById;
     private TransactionsRegisterModel model = new();
     private string PageTitle => Id.HasValue ? "Editar transação" : "Nova transação";
-    private List<KeyValuePair<int, string>> subcategories = new();
+    private string PageToReturn => "/transactions";
+    private IEnumerable<Tag> tags = Array.Empty<Tag>();
 
     protected override async Task OnInitializedAsync()
     {
-        subcategories = await Db.SubCategories
-        .Select(c => new KeyValuePair<int, string>(c.Id, c.Name))
-        .ToListAsync();
+        tags = await Db.Tags.Include(tv => tv.Values).ToListAsync();
 
-        if (Id.HasValue)
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("copyBy", out var copyByValue))
         {
-            var entity = await Db.FinancialTransactions.SingleOrDefaultAsync(c => c.Id.Equals(Id.Value));
+            copyById = int.TryParse(copyByValue, out var copyBy) ? copyBy : (int?)null;
+        }
+
+        var transactionIdToLoad = Id ?? copyById;
+
+        if (transactionIdToLoad.HasValue)
+        {
+            var entity = await Db.FinancialTransactions
+            .Include(f => f.Payments)
+            .Include(f => f.Tags).ThenInclude(p => p.TagValue)
+            .SingleOrDefaultAsync(c => c.Id.Equals(transactionIdToLoad.Value));
+
             if (entity is not null)
             {
                 model = entity.ToModel();
+
+                if (copyById.HasValue)
+                {
+                    Id = null;
+                    model.Payments.ForEach(p => p.Id = null);
+                }
             }
             else
             {
-                NavigationManager.NavigateTo("/transactions");
+                NavigationManager.NavigateTo(PageToReturn);
             }
+        }
+        else
+        {
+            model.AddEmptyPayment();
         }
     }
 
     private async Task HandleValidSubmit()
     {
-        var subCategory = await Db.SubCategories.Include(s => s.Category).SingleAsync(c => c.Id.Equals(model.SubCategoryId));
+        var allTagValues = tags.SelectMany(t => t.Values).ToList();
 
         if (Id.HasValue)
         {
             var entity = await Db.FinancialTransactions.SingleAsync(c => c.Id.Equals(Id.Value));
-            entity.UpdateFromModel(model, subCategory);
+            entity.UpdateFromModel(model, allTagValues);
             Db.FinancialTransactions.Update(entity);
         }
         else
         {
-            var entity = model.ToEntity(subCategory);
+            var entity = model.ToEntity(allTagValues);
             Db.FinancialTransactions.Add(entity);
         }
 
         await Db.SaveChangesAsync();
-        NavigationManager.NavigateTo("/transactions");
+        NavigationManager.NavigateTo(PageToReturn);
     }
 
     private async Task DeleteEntity()
@@ -59,7 +82,17 @@
         Db.FinancialTransactions.Remove(entity);
         await Db.SaveChangesAsync();
 
-        NavigationManager.NavigateTo("/transactions");
+        NavigationManager.NavigateTo(PageToReturn);
+    }
+
+    private void UpdateSelectedTags(ChangeEventArgs e, IEnumerable<TagValue> tagValues)
+    {
+        int.TryParse(e.Value?.ToString(), out var selectedValue);
+
+        if (selectedValue == 0) return;
+
+        model.TagValueIds.RemoveAll(id => tagValues.Any(tv => tv.Id == id));
+        model.TagValueIds.Add(selectedValue);
     }
 }
 
@@ -72,30 +105,98 @@
     <ValidationSummary />
 
     <div class="form-group">
+        <label for="tr-name">Nome</label>
+        <InputText id="tr-name" class="form-control" @bind-Value="model.Name" />
+    </div>
+
+    <div class="form-group">
         <label for="date">Data</label>
         <InputDate id="date" class="form-control" @bind-Value="model.Date" />
     </div>
 
-    <div class="form-group">
-        <label for="value">Valor</label>
-        <InputNumber id="value" class="form-control" @bind-Value="model.Amount" />
+    <div class="row mb-3">
+        <div class="col-8">
+            <h2 class="text-left my-4">Pagamentos</h2>
+        </div>
     </div>
 
-    <div class="form-group">
-        <label for="subcategory">Subcategoria</label>
-        <InputSelect id="subcategory" class="form-control" @bind-Value="model.SubCategoryId">
-            <option value="0">Selecione uma subcategoria</option>
-            @foreach (var item in subcategories)
+    <table class="table">
+        <thead>
+            <tr>
+                <th style="width: 5%;">#</th>
+                <th style="width: 20%;">Data</th>
+                <th style="width: 30%;">Observação</th>
+                <th style="width: 15%;">Status</th>
+                <th style="width: 20%;">Valor</th>
+                <th style="width: 10%;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in model.Payments)
             {
-                <option value="@item.Key">@item.Value</option>
+                <tr>
+                    <td>
+                        <strong>@(model.Payments.IndexOf(item) + 1)</strong>
+                    </td>
+                    <td>
+                        <InputDate class="form-control" @bind-Value="item.Date" />
+                        <ValidationMessage For="@(() => item.Date)" class="text-danger" />
+                    </td>
+                    <td>
+                        <InputText class="form-control" @bind-Value="item.Observation" />
+                        <ValidationMessage For="@(() => item.Observation)" class="text-danger" />
+                    </td>
+                    <td>
+                        <InputSelect class="form-control" @bind-Value="item.Paid">
+                            <option value="false">Pendente</option>
+                            <option value="true">Pago</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => item.Paid)" class="text-danger" />
+                    </td>
+                    <td>
+                        <InputNumber class="form-control" @bind-Value="item.Value" />
+                        <ValidationMessage For="@(() => item.Value)" class="text-danger" />
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-danger" @onclick="() => model.Payments.Remove(item)">
+                            Remover
+                        </button>
+                    </td>
+                </tr>
             }
-        </InputSelect>
-    </div>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="5">
+                    <div class="d-flex justify-content-end">
+                        <span>Total:</span>
+                        <strong>@model.Payments.Sum(p => p.Value)</strong>
+                    </div>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-secondary" @onclick="() => model.AddEmptyPayment()">
+                        Adicionar
+                    </button>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
 
-    <div class="form-group">
-        <label for="description">Descrição</label>
-        <InputText id="description" class="form-control" @bind-Value="model.Description" />
-    </div>
+    <h2 class="text-left my-4">Tags</h2>
+
+    @foreach (var tag in tags)
+    {
+        <div class="form-group">
+            <label for="tags">@tag.Name</label>
+            <select id="tags" class="form-control" @onchange="(e) => UpdateSelectedTags(e, tag.Values)">
+                <option value="0">Selecione...</option>
+                @foreach (var tagValue in tag.Values.OrderBy(tv => tv.Value).ToList())
+                {
+                    <option value="@tagValue.Id" selected="@model.TagValueIds.Contains(tagValue.Id)">@tagValue.Value</option>
+                }
+            </select>
+        </div>
+    }
 
     <div class="d-flex justify-content-between align-items-center my-4">
         @if (Id.HasValue)

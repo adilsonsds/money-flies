@@ -1,0 +1,48 @@
+﻿@page "/tags"
+@using app.Data
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext Db
+
+@code {
+    private Tag[]? tags;
+
+    protected override async Task OnInitializedAsync()
+    {
+        tags = await Db.Tags.ToArrayAsync();
+    }
+}
+
+<PageTitle>Tags</PageTitle>
+
+<h1>Tags</h1>
+
+<a href="/tags/register" class="btn btn-primary">Criar</a>
+
+@if (tags == null)
+{
+    <p><em>Carregando...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tag in tags)
+            {
+                <tr>
+                    <td>@tag.Id</td>
+                    <td>@tag.Name</td>
+                    <td>
+                        <a href="/tags/register/@tag.Id" class="btn btn-secondary">Editar</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

@@ -1,0 +1,127 @@
+@page "/tags/register/{id:int?}"
+@using app.Data
+@using Microsoft.EntityFrameworkCore
+@using app.Models
+@inject AppDbContext Db
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+    private TagsRegisterModel model = new();
+    private ICollection<int> valuesIdsBeingUsed = [];
+    private string pageTitle => Id.HasValue ? "Editar tag" : "Nova tag";
+    private string pageToReturn => "/tags";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id.HasValue)
+        {
+            var entity = await Db.Tags.Include(c => c.Values).SingleOrDefaultAsync(c => c.Id.Equals(Id.Value));
+            if (entity is not null)
+            {
+                model = entity.ToModel();
+                valuesIdsBeingUsed = Db.FinancialTransactionTags.Where(t => t.Tag.Id.Equals(Id.Value)).Select(t =>
+                t.TagValue.Id).Distinct().ToList();
+            }
+            else
+            {
+                NavigationManager.NavigateTo(pageToReturn);
+            }
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (Id.HasValue)
+        {
+            var entity = await Db.Tags.Include(c => c.Values).SingleAsync(c => c.Id.Equals(Id.Value));
+            entity.UpdateFromModel(model, valuesIdsBeingUsed);
+            Db.Tags.Update(entity);
+        }
+        else
+        {
+            var entity = model.ToEntity();
+            Db.Tags.Add(entity);
+        }
+
+        await Db.SaveChangesAsync();
+        NavigationManager.NavigateTo(pageToReturn);
+    }
+
+    private async Task DeleteEntity()
+    {
+        var entity = await Db.Tags.Include(c => c.Values).SingleAsync(c => c.Id.Equals(Id!.Value));
+
+        if (valuesIdsBeingUsed.Any())
+        {
+            var message = "Não é possível excluir a categoria pois existem transações associadas a ela.";
+            await JSRuntime.InvokeVoidAsync("alert", message);
+            return;
+        }
+
+        Db.Tags.Remove(entity);
+        await Db.SaveChangesAsync();
+        NavigationManager.NavigateTo(pageToReturn);
+    }
+}
+
+<PageTitle>@pageTitle</PageTitle>
+
+<h1 class="text-left my-4">@pageTitle</h1>
+
+<EditForm Model="model" OnValidSubmit="HandleValidSubmit" class="container mb-3">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row mb-3">
+        <div class="col-lg-6 col-md-8 col-12">
+            <label for="name" class="form-label">Nome</label>
+            <InputText id="name" class="form-control" @bind-Value="model.Name" />
+            <ValidationMessage For="@(() => model.Name)" class="text-danger" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-10">
+            <h2>Valores</h2>
+        </div>
+    </div>
+
+    @foreach (var item in model.Values)
+    {
+        <div class="row mb-3">
+            <div class="col-9">
+                <InputText class="form-control" @bind-Value="item.Value" />
+                <ValidationMessage For="@(() => item.Value)" class="text-danger" />
+            </div>
+            <div class="col-3">
+                <button type="button" class="btn btn-danger" @onclick="() => model.Values.Remove(item)"
+                    disabled="@(item.Id.HasValue && valuesIdsBeingUsed.Contains(item.Id.Value))">
+                    Remover
+                </button>
+            </div>
+        </div>
+    }
+
+    <div class="row mb-3">
+        <div class="col-3 col-offset-9">
+            <button type="button" class="btn btn-secondary" @onclick="() => model.AddEmptyValue()">
+                Adicionar
+            </button>
+        </div>
+    </div>
+
+    <div class="d-block my-4">
+        <button type="submit" class="btn btn-primary mr-2">
+            Salvar
+        </button>
+        @if (Id.HasValue)
+        {
+            <button type="button" class="btn btn-link" @onclick="DeleteEntity">
+                Excluir tudo
+            </button>
+        }
+    </div>
+</EditForm>

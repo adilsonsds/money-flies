@@ -4,47 +4,145 @@ namespace app.Models;
 
 public record TransactionsRegisterModel
 {
-    public int SubCategoryId { get; set; }
-    public decimal Amount { get; set; }
-    public string? Description { get; set; }
+    public List<int> TagValueIds { get; set; } = [];
+    public string Name { get; set; } = string.Empty;
+    public DateOnly Date { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+    public List<TransactionsRegisterPaymentModel> Payments { get; set; } = [];
+
+    public void AddEmptyPayment()
+    {
+        var lastPayment = Payments.LastOrDefault();
+
+        if (lastPayment != null)
+        {
+            var dayInNextMonth = lastPayment.Date.AddMonths(1);
+            var incrementedObservation = lastPayment.Observation;
+            var parts = lastPayment.Observation?.Split('/');
+            if (parts != null && parts.Length == 2 && int.TryParse(parts[0], out var firstNumber))
+            {
+                incrementedObservation = $"{firstNumber + 1}/{parts[1]}";
+            }
+
+            Payments.Add(new TransactionsRegisterPaymentModel
+            {
+                Value = lastPayment.Value,
+                Date = dayInNextMonth,
+                Paid = lastPayment.Paid,
+                Observation = incrementedObservation
+            });
+        }
+        else
+        {
+            Payments.Add(new TransactionsRegisterPaymentModel());
+        }
+    }
+}
+
+public record TransactionsRegisterPaymentModel
+{
+    public int? Id { get; set; }
+    public decimal Value { get; set; }
     public DateOnly Date { get; set; } = DateOnly.FromDateTime(DateTime.Now);
     public bool Paid { get; set; }
+    public string? Observation { get; set; }
 }
 
 public static class TransactionsRegisterModelExtensions
 {
-    public static FinancialTransaction ToEntity(this TransactionsRegisterModel model, SubCategory subCategory)
+    public static FinancialTransaction ToEntity(this TransactionsRegisterModel model, IEnumerable<TagValue> tagValues)
     {
-        return new FinancialTransaction
+        var entity = new FinancialTransaction
         {
-            SubCategory = subCategory,
-            Category = subCategory.Category,
-            Amount = model.Amount,
-            Description = model.Description,
+            Amount = model.Payments.Sum(p => p.Value),
+            Name = model.Name,
             Date = model.Date,
-            Paid = model.Paid
+            Tags = [],
+            Payments = []
         };
+
+        foreach (var payment in model.Payments)
+        {
+            entity.Payments.Add(new FinancialTransactionPayment
+            {
+                FinancialTransaction = entity,
+                Value = payment.Value,
+                Date = payment.Date,
+                Paid = payment.Paid,
+                Observation = payment.Observation
+            });
+        }
+
+        foreach (var tagValue in tagValues.Where(tv => model.TagValueIds.Contains(tv.Id)))
+        {
+            entity.Tags.Add(new FinancialTransactionTag
+            {
+                FinancialTransaction = entity,
+                TagValue = tagValue,
+                Tag = tagValue.Tag
+            });
+        }
+
+        return entity;
     }
 
-    public static void UpdateFromModel(this FinancialTransaction transaction, TransactionsRegisterModel model, SubCategory subCategory)
+    public static void UpdateFromModel(this FinancialTransaction transaction, TransactionsRegisterModel model, IEnumerable<TagValue> tagValues)
     {
-        transaction.SubCategory = subCategory;
-        transaction.Category = subCategory.Category;
-        transaction.Amount = model.Amount;
-        transaction.Description = model.Description;
+        transaction.Name = model.Name;
         transaction.Date = model.Date;
-        transaction.Paid = model.Paid;
+        transaction.Amount = model.Payments.Sum(p => p.Value);
+
+        var paymentsToRemove = transaction.Payments.Where(p => !model.Payments.Any(pModel => pModel.Id == p.Id)).ToList();
+        foreach (var paymentToRemove in paymentsToRemove)
+        {
+            transaction.Payments.Remove(paymentToRemove);
+        }
+
+        var newPayments = model.Payments.Where(p => !transaction.Payments.Any(pEntity => pEntity.Id == p.Id)).ToList();
+        foreach (var newPayment in newPayments)
+        {
+            transaction.Payments.Add(new FinancialTransactionPayment
+            {
+                FinancialTransaction = transaction,
+                Value = newPayment.Value,
+                Date = newPayment.Date,
+                Paid = newPayment.Paid,
+                Observation = newPayment.Observation
+            });
+        }
+
+        var tagValuesToRemove = transaction.Tags.Where(t => !model.TagValueIds.Contains(t.TagValue.Id)).ToList();
+        foreach (var tagValueToRemove in tagValuesToRemove)
+        {
+            transaction.Tags.Remove(tagValueToRemove);
+        }
+
+        var newTagValues = tagValues.Where(tv => model.TagValueIds.Contains(tv.Id) && !transaction.Tags.Any(t => t.TagValue.Id == tv.Id)).ToList();
+        foreach (var newTagValue in newTagValues)
+        {
+            transaction.Tags.Add(new FinancialTransactionTag
+            {
+                FinancialTransaction = transaction,
+                TagValue = newTagValue,
+                Tag = newTagValue.Tag
+            });
+        }
     }
 
     public static TransactionsRegisterModel ToModel(this FinancialTransaction transaction)
     {
         return new TransactionsRegisterModel
         {
-            SubCategoryId = transaction.SubCategory.Id,
-            Amount = transaction.Amount,
-            Description = transaction.Description,
+            Name = transaction.Name,
             Date = transaction.Date,
-            Paid = transaction.Paid
+            TagValueIds = [.. transaction.Tags.Select(t => t.TagValue.Id)],
+            Payments = [.. transaction.Payments.Select(p => new TransactionsRegisterPaymentModel
+            {
+                Id = p.Id,
+                Value = p.Value,
+                Date = p.Date,
+                Paid = p.Paid,
+                Observation = p.Observation
+            })]
         };
     }
 }

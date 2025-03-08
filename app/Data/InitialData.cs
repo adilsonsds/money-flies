@@ -2,52 +2,49 @@ namespace app.Data;
 
 public class InitialData
 {
-    public static IEnumerable<Category> Categories =>
+    public static IEnumerable<Tag> Tags =>
     [
-        new() { Id = 1, Name = "Receitas ativas", Description = "Dinheiro ganho com trabalho ou prestação de serviços." },
-        new() { Id = 2, Name = "Receitas passivas", Description = "Dinheiro ganho sem esforço contínuo (investimentos, aluguéis, juros)." },
-        new() { Id = 3, Name = "Despesas essenciais", Description = "Necessidades básicas e recorrentes." },
-        new() { Id = 4, Name = "Despesas variáveis", Description = "Custos que mudam mensalmente." },
-        new() { Id = 5, Name = "Despesas fixas", Description = "Gastos recorrentes com valores previsíveis." },
-        new() { Id = 6, Name = "Despesas discricionárias", Description = "Não essenciais, relacionadas a lazer e estilo de vida." },
-        new() { Id = 7, Name = "Despesas ocasional", Description = "Gastos não recorrentes ou inesperados." }
+        new() { Id = 1, Name = "Tipo" },
+        new() { Id = 2, Name = "Categoria" }
     ];
 
-    public static IEnumerable<SubCategory> SubCategories =>
+    public static IEnumerable<TagValue> TagValues =>
     [
-        new() { Id = 1, CategoryId = 1, Name = "Salário", UsedForRevenue = true },
-        new() { Id = 2, CategoryId = 1, Name = "Bônus e comissões", UsedForRevenue = true },
-        new() { Id = 3, CategoryId = 2, Name = "Dividendos", UsedForRevenue = true },
-        new() { Id = 4, CategoryId = 2, Name = "Rendimentos de investimentos", UsedForRevenue = true },
-        new() { Id = 5, CategoryId = 2, Name = "Aluguel de imóveis", UsedForRevenue = true },
-        new() { Id = 6, CategoryId = 2, Name = "Venda de ativos", UsedForRevenue = true },
-        new() { Id = 7, CategoryId = 3, Name = "Aluguel", UsedForRevenue = false },
-        new() { Id = 8, CategoryId = 3, Name = "Condomínio", UsedForRevenue = false },
-        new() { Id = 9, CategoryId = 3, Name = "Energia elétrica", UsedForRevenue = false },
-        new() { Id = 10, CategoryId = 3, Name = "Água e esgoto", UsedForRevenue = false },
-        new() { Id = 11, CategoryId = 3, Name = "Gás", UsedForRevenue = false },
-        new() { Id = 12, CategoryId = 3, Name = "Internet", UsedForRevenue = false },
-        new() { Id = 13, CategoryId = 3, Name = "Telefone", UsedForRevenue = false },
-        new() { Id = 14, CategoryId = 3, Name = "TV por assinatura e streamings", UsedForRevenue = false },
-        new() { Id = 15, CategoryId = 3, Name = "Supermercado", UsedForRevenue = false },
-        new() { Id = 16, CategoryId = 3, Name = "Combustível", UsedForRevenue = false },
-        new() { Id = 17, CategoryId = 3, Name = "Transporte público", UsedForRevenue = false },
-        new() { Id = 18, CategoryId = 3, Name = "Manutenção do carro", UsedForRevenue = false },
-        new() { Id = 19, CategoryId = 3, Name = "Seguro saúde", UsedForRevenue = false },
-        new() { Id = 20, CategoryId = 4, Name = "Plano de saúde", UsedForRevenue = false },
-        new() { Id = 21, CategoryId = 4, Name = "Mensalidade escolar", UsedForRevenue = false },
-        new() { Id = 22, CategoryId = 4, Name = "Financiamentos e empréstimos", UsedForRevenue = false },
-        new() { Id = 23, CategoryId = 4, Name = "Assinaturas e serviços", UsedForRevenue = false },
-        new() { Id = 24, CategoryId = 5, Name = "Alimentação fora de casa", UsedForRevenue = false },
-        new() { Id = 25, CategoryId = 5, Name = "Lazer e entretenimento", UsedForRevenue = false },
-        new() { Id = 26, CategoryId = 5, Name = "Compras e vestuário", UsedForRevenue = false },
-        new() { Id = 27, CategoryId = 5, Name = "Cuidados pessoais", UsedForRevenue = false },
-        new() { Id = 28, CategoryId = 6, Name = "Viagens e turismo", UsedForRevenue = false },
-        new() { Id = 29, CategoryId = 6, Name = "Hobbies e lazer", UsedForRevenue = false },
-        new() { Id = 30, CategoryId = 6, Name = "Presentes e doações", UsedForRevenue = false },
-        new() { Id = 31, CategoryId = 6, Name = "Eletrônicos e equipamentos", UsedForRevenue = false },
-        new() { Id = 32, CategoryId = 7, Name = "Despesas médicas", UsedForRevenue = false },
-        new() { Id = 33, CategoryId = 7, Name = "Reparos e manutenção", UsedForRevenue = false },
-        new() { Id = 34, CategoryId = 7, Name = "Multas e taxas extras", UsedForRevenue = false }
+        new() { Id = 1, TagId = 1, Value = "Receita" },
+        new() { Id = 2, TagId = 1, Value = "Despesa" },
+        new() { Id = 3, TagId = 2, Value =  "Salário" },
+        new() { Id = 4, TagId = 2, Value =  "Bônus e comissões" },
+        new() { Id = 5, TagId = 2, Value =  "Dividendos" },
+        new() { Id = 6, TagId = 2, Value =  "Rendimentos de investimentos" },
+        new() { Id = 7, TagId = 2, Value =  "Aluguel de imóveis" },
+        new() { Id = 8, TagId = 2, Value =  "Venda de ativos" },
+        new() { Id = 9, TagId = 2, Value =  "Aluguel" },
+        new() { Id = 10, TagId = 2, Value =  "Condomínio" },
+        new() { Id = 11, TagId = 2, Value =  "Energia elétrica" },
+        new() { Id = 12, TagId = 2, Value =  "Água e esgoto" },
+        new() { Id = 13, TagId = 2, Value =  "Gás" },
+        new() { Id = 14, TagId = 2, Value =  "Internet" },
+        new() { Id = 15, TagId = 2, Value =  "Telefone" },
+        new() { Id = 16, TagId = 2, Value =  "TV por assinatura e streamings" },
+        new() { Id = 17, TagId = 2, Value =  "Supermercado" },
+        new() { Id = 18, TagId = 2, Value =  "Combustível" },
+        new() { Id = 19, TagId = 2, Value =  "Transporte público" },
+        new() { Id = 20, TagId = 2, Value =  "Manutenção do carro" },
+        new() { Id = 21, TagId = 2, Value =  "Seguro saúde" },
+        new() { Id = 22, TagId = 2, Value =  "Plano de saúde" },
+        new() { Id = 23, TagId = 2, Value =  "Mensalidade escolar" },
+        new() { Id = 24, TagId = 2, Value =  "Financiamentos e empréstimos" },
+        new() { Id = 25, TagId = 2, Value =  "Assinaturas e serviços" },
+        new() { Id = 26, TagId = 2, Value =  "Alimentação fora de casa" },
+        new() { Id = 27, TagId = 2, Value =  "Lazer e entretenimento" },
+        new() { Id = 28, TagId = 2, Value =  "Compras e vestuário" },
+        new() { Id = 29, TagId = 2, Value =  "Cuidados pessoais" },
+        new() { Id = 30, TagId = 2, Value =  "Viagens e turismo" },
+        new() { Id = 31, TagId = 2, Value =  "Hobbies e lazer" },
+        new() { Id = 32, TagId = 2, Value =  "Presentes e doações" },
+        new() { Id = 33, TagId = 2, Value =  "Eletrônicos e equipamentos" },
+        new() { Id = 34, TagId = 2, Value =  "Despesas médicas" },
+        new() { Id = 35, TagId = 2, Value =  "Reparos e manutenção" },
+        new() { Id = 36, TagId = 2, Value =  "Multas e taxas extras" }
     ];
 }
