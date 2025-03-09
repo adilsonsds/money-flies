@@ -5,19 +5,53 @@
 
 @code {
     private IEnumerable<FinancialTransactionPayment> transactionPayments = Array.Empty<FinancialTransactionPayment>();
+    private DateTime? startDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+    private DateTime? endDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month,
+    DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month));
 
     protected override async Task OnInitializedAsync()
     {
-        transactionPayments = await Db.FinancialTransactionPayments
-        .Include(p => p.FinancialTransaction)
-        .OrderByDescending(p => p.Date)
-        .ToListAsync();
+        await LoadTransactions();
+    }
+
+    private async Task LoadTransactions()
+    {
+        var query = Db.FinancialTransactionPayments.Include(p => p.FinancialTransaction).AsQueryable();
+
+        if (startDate.HasValue)
+        {
+            query = query.Where(p => p.Date >= DateOnly.FromDateTime(startDate.Value));
+        }
+
+        if (endDate.HasValue)
+        {
+            query = query.Where(p => p.Date <= DateOnly.FromDateTime(endDate.Value));
+        }
+
+        transactionPayments = await query.OrderByDescending(p => p.Date).ToListAsync();
+    }
+
+    private async Task ApplyFilter()
+    {
+        await LoadTransactions();
     }
 }
 
 <PageTitle>Transações</PageTitle>
 
 <h1>Transações</h1>
+
+<div class="row mb-3">
+    <div class="col-3">
+        <InputDate class="form-control" @bind-Value="startDate" />
+    </div>
+    <div class="col-3">
+        <InputDate class="form-control" @bind-Value="endDate" />
+    </div>
+    <div class="col-3">
+        <button class="btn btn-primary" @onclick="ApplyFilter">Aplicar Filtro</button>
+    </div>
+</div>
 
 <a href="/transactions/register" class="btn btn-primary">Nova transação</a>
 
