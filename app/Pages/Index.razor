@@ -4,18 +4,35 @@
 @inject AppDbContext Db
 
 @code {
+    private PaymentStatusEnum paymentStatus = PaymentStatusEnum.All;
     private IEnumerable<Tag> tags = new List<Tag>();
     private IEnumerable<SummaryValue> summaries = new List<SummaryValue>();
     private IEnumerable<DateOnly> months = Enumerable.Range(1, 12).Select(m => new DateOnly(2025, m, 1));
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
         tags = Db.Tags.Include(t => t.Values).ToList();
 
+        var payments = Db.FinancialTransactionPayments.AsQueryable();
+
+        if (paymentStatus == PaymentStatusEnum.Only_Paid)
+        {
+            payments = payments.Where(p => p.Paid);
+        }
+        else if (paymentStatus == PaymentStatusEnum.Only_Pending)
+        {
+            payments = payments.Where(p => !p.Paid);
+        }
+
         summaries = await (
-        from tr in Db.FinancialTransactions.AsQueryable()
+        from tr_pay in payments
+        join tr in Db.FinancialTransactions.AsQueryable() on tr_pay.FinancialTransaction.Id equals tr.Id
         join tr_tag in Db.FinancialTransactionTags.AsQueryable() on tr.Id equals tr_tag.FinancialTransaction.Id
-        join tr_pay in Db.FinancialTransactionPayments.AsQueryable() on tr.Id equals tr_pay.FinancialTransaction.Id
         group new { tr_tag, pay = tr_pay } by new
         {
             TagId = tr_tag.Tag.Id,
@@ -51,6 +68,19 @@
     }
 
     record SummaryValue(int TagId, int TagValueId, int Month, int Year, decimal Total);
+
+    enum PaymentStatusEnum
+    {
+        All = 0,
+        Only_Paid = 1,
+        Only_Pending = 2
+    }
+
+    private async Task OnPaymentStatusChanged(ChangeEventArgs e)
+    {
+        paymentStatus = (PaymentStatusEnum)Enum.Parse(typeof(PaymentStatusEnum), e.Value.ToString());
+        await LoadDataAsync();
+    }
 }
 
 <PageTitle>Início</PageTitle>
@@ -58,6 +88,15 @@
 <h1 class="display-4">Hello, world!</h1>
 
 <p class="lead">Welcome to your new app.</p>
+
+<div class="mb-5">
+    <label for="paymentStatus">Filter by Payment Status:</label>
+    <select id="paymentStatus" @onchange="OnPaymentStatusChanged" class="form-select">
+        <option value="All">All</option>
+        <option value="Only_Paid">Only Paid</option>
+        <option value="Only_Pending">Only Pending</option>
+    </select>
+</div>
 
 <div class="table-responsive">
     <table class="table table-bordered">
