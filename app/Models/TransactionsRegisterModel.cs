@@ -97,17 +97,19 @@ public static class TransactionsRegisterModelExtensions
             transaction.Payments.Remove(paymentToRemove);
         }
 
-        var newPayments = model.Payments.Where(p => !transaction.Payments.Any(pEntity => pEntity.Id == p.Id)).ToList();
-        foreach (var newPayment in newPayments)
+        foreach (var paymentModel in model.Payments)
         {
-            transaction.Payments.Add(new FinancialTransactionPayment
+            var payment = transaction.Payments.FirstOrDefault(p => p.Id == paymentModel.Id);
+            if (payment == null)
             {
-                FinancialTransaction = transaction,
-                Value = newPayment.Value,
-                Date = newPayment.Date,
-                Paid = newPayment.Paid,
-                Observation = newPayment.Observation
-            });
+                payment = new FinancialTransactionPayment { FinancialTransaction = transaction };
+                transaction.Payments.Add(payment);
+            }
+
+            payment.Value = paymentModel.Value;
+            payment.Date = paymentModel.Date;
+            payment.Paid = paymentModel.Paid;
+            payment.Observation = paymentModel.Observation;
         }
 
         var tagValuesToRemove = transaction.Tags.Where(t => !model.TagValueIds.Contains(t.TagValue.Id)).ToList();

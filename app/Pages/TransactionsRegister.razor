@@ -87,11 +87,10 @@
 
     private void UpdateSelectedTags(ChangeEventArgs e, IEnumerable<TagValue> tagValues)
     {
-        int.TryParse(e.Value?.ToString(), out var selectedValue);
-
-        if (selectedValue == 0) return;
-
         model.TagValueIds.RemoveAll(id => tagValues.Any(tv => tv.Id == id));
+
+        int.TryParse(e.Value?.ToString(), out var selectedValue);
+        if (selectedValue == 0) return;
         model.TagValueIds.Add(selectedValue);
     }
 }

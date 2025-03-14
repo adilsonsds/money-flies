@@ -4,8 +4,8 @@ public class FinancialTransactionPayment
 {
     public int Id { get; set; }
     public FinancialTransaction FinancialTransaction { get; set; }
-    public required decimal Value { get; set; }
-    public required DateOnly Date { get; set; }
-    public required bool Paid { get; set; }
+    public decimal Value { get; set; }
+    public DateOnly Date { get; set; }
+    public bool Paid { get; set; }
     public string? Observation { get; set; }
 }
