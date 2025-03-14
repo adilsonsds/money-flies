@@ -14,10 +14,16 @@
 
         summaries = await (
         from tr in Db.FinancialTransactions.AsQueryable()
-        join tag in Db.FinancialTransactionTags.AsQueryable() on tr.Id equals tag.FinancialTransaction.Id
-        join pay in Db.FinancialTransactionPayments.AsQueryable() on tr.Id equals pay.FinancialTransaction.Id
-        group new { tag, pay } by new { tag.TagValue.Id, pay.Date.Month, pay.Date.Year } into g
-        select new SummaryValue(g.Key.Id, g.Key.Month, g.Key.Year, g.Sum(x => x.pay.Value)))
+        join tr_tag in Db.FinancialTransactionTags.AsQueryable() on tr.Id equals tr_tag.FinancialTransaction.Id
+        join tr_pay in Db.FinancialTransactionPayments.AsQueryable() on tr.Id equals tr_pay.FinancialTransaction.Id
+        group new { tr_tag, pay = tr_pay } by new
+        {
+            TagId = tr_tag.Tag.Id,
+            TagValueId = tr_tag.TagValue.Id,
+            tr_pay.Date.Month,
+            tr_pay.Date.Year
+        } into g
+        select new SummaryValue(g.Key.TagId, g.Key.TagValueId, g.Key.Month, g.Key.Year, g.Sum(x => x.pay.Value)))
         .ToListAsync();
     }
 
@@ -38,7 +44,13 @@
         return total.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
     }
 
-    record SummaryValue(int TagValueId, int Month, int Year, decimal Total);
+    private string GetFormattedSummaryValueByTag(DateOnly firstDayOfMonth, int tagId)
+    {
+        var total = summaries.Where(s => s.TagId == tagId && s.Month == firstDayOfMonth.Month).Sum(s => s.Total);
+        return total.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+    }
+
+    record SummaryValue(int TagId, int TagValueId, int Month, int Year, decimal Total);
 }
 
 <PageTitle>Início</PageTitle>
@@ -81,6 +93,15 @@
                         }
                     </tr>
                 }
+                <tr>
+                    <th>Total</th>
+                    @foreach (var month in months)
+                    {
+                        <th style="text-align: right;">
+                            @GetFormattedSummaryValueByTag(month, tag.Id)
+                        </th>
+                    }
+                </tr>
                 <tr>
                     <th colspan="@(months.Count() + 1)" style="height: 45px;border-right: none;border-left: none;"></th>
                 </tr>
