@@ -1,16 +1,20 @@
 @page "/transactions"
+@using Microsoft.AspNetCore.WebUtilities
 @using app.Data
 @using Microsoft.EntityFrameworkCore
 @inject AppDbContext Db
+@inject NavigationManager NavigationManager
 
 @code {
+    private DateTime? startDate;
+    private DateTime? endDate;
+    private List<int> selectedTagValueIds = new();
     private IEnumerable<FinancialTransactionPayment> transactionPayments = Array.Empty<FinancialTransactionPayment>();
-    private DateTime? startDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-    private DateTime? endDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month,
-    DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month));
+    private IEnumerable<Tag> tags = new List<Tag>();
 
     protected override async Task OnInitializedAsync()
     {
+        SetDefaultFilter();
         await LoadTransactions();
     }
 
@@ -28,12 +32,60 @@
             query = query.Where(p => p.Date <= DateOnly.FromDateTime(endDate.Value));
         }
 
+        if (selectedTagValueIds.Any())
+        {
+            query = query.Where(p => p.FinancialTransaction.Tags.Any(t => selectedTagValueIds.Contains(t.TagValue.Id)));
+        }
+
         transactionPayments = await query.OrderByDescending(p => p.Date).ToListAsync();
     }
 
     private async Task ApplyFilter()
     {
         await LoadTransactions();
+    }
+
+    private void SetDefaultFilter()
+    {
+        var initialStartDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        var initialEndDate = initialStartDate.AddMonths(1).AddSeconds(-1);
+
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("startDate", out var startDateValue))
+        {
+            DateTime.TryParse(startDateValue, out initialStartDate);
+        }
+
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("endDate", out var endDateValue))
+        {
+            DateTime.TryParse(endDateValue, out initialEndDate);
+        }
+
+        startDate = initialStartDate;
+        endDate = initialEndDate;
+
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("tagValueId", out var tagValueIdValue))
+        {
+            if (int.TryParse(tagValueIdValue, out var tagValueId))
+                selectedTagValueIds.Add(tagValueId);
+        }
+
+        tags = Db.Tags.Include(t => t.Values).ToList();
+    }
+
+    private async Task ResetFilter()
+    {
+        SetDefaultFilter();
+        await LoadTransactions();
+    }
+
+    private void UpdateSelectedTags(ChangeEventArgs e, IEnumerable<TagValue> tagValues)
+    {
+        selectedTagValueIds.RemoveAll(id => tagValues.Any(tv => tv.Id == id));
+
+        int.TryParse(e.Value?.ToString(), out var selectedValue);
+        if (selectedValue == 0) return;
+        selectedTagValueIds.Add(selectedValue);
     }
 }
 
@@ -43,12 +95,28 @@
 
 <div class="row mb-3">
     <div class="col-3">
+        <label>Data inicial</label>
         <InputDate class="form-control" @bind-Value="startDate" />
     </div>
     <div class="col-3">
+        <label>Data final</label>
         <InputDate class="form-control" @bind-Value="endDate" />
     </div>
-    <div class="col-3">
+    @foreach (var tag in tags)
+    {
+        <div class="col-3">
+            <label>@tag.Name</label>
+            <select class="form-control" @onchange="(e) => UpdateSelectedTags(e, tag.Values)">
+                <option value="0">Selecione...</option>
+                @foreach (var tagValue in tag.Values.OrderBy(tv => tv.Value).ToList())
+                {
+                    <option value="@tagValue.Id" selected="@selectedTagValueIds.Contains(tagValue.Id)">@tagValue.Value</option>
+                }
+            </select>
+        </div>
+    }
+    <div class="col-3 d-flex align-items-end justify-content-between">
+        <button class="btn btn-secondary" @onclick="ResetFilter">Limpar Filtro</button>
         <button class="btn btn-primary" @onclick="ApplyFilter">Aplicar Filtro</button>
     </div>
 </div>
@@ -68,8 +136,8 @@ else
                 <th class="col-2 text-center">Pagamento em</th>
                 <th class="col-4 text-left">Descrição</th>
                 <th class="col-1 text-center">Status</th>
-                <th class="col-2 text-right">Valor</th>
-                <th class="col-1 text-center">Ações</th>
+                <th class="col-1" style="text-align: right;">Valor</th>
+                <th class="col-2 text-center">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -100,8 +168,8 @@ else
                             <span class="badge bg-warning">Pendente</span>
                         }
                     </td>
-                    <td class="text-right">
-                        @transactionPayment.Value.ToString("N2")
+                    <td style="text-align: right;">
+                        @transactionPayment.Value.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))
                     </td>
                     <td class="text-center">
                         <a href="/transactions/register/@transactionPayment.FinancialTransaction.Id"

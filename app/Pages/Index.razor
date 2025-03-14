@@ -1,9 +1,93 @@
 ﻿@page "/"
+@using Microsoft.EntityFrameworkCore
+@using app.Data
+@inject AppDbContext Db
 
-<PageTitle>Index</PageTitle>
+@code {
+    private IEnumerable<Tag> tags = new List<Tag>();
+    private IEnumerable<SummaryValue> summaries = new List<SummaryValue>();
+    private IEnumerable<DateOnly> months = Enumerable.Range(1, 12).Select(m => new DateOnly(2025, m, 1));
 
-<h1>Hello, world!</h1>
+    protected override async Task OnInitializedAsync()
+    {
+        tags = Db.Tags.Include(t => t.Values).ToList();
 
-Welcome to your new app.
+        summaries = await (
+        from tr in Db.FinancialTransactions.AsQueryable()
+        join tag in Db.FinancialTransactionTags.AsQueryable() on tr.Id equals tag.FinancialTransaction.Id
+        join pay in Db.FinancialTransactionPayments.AsQueryable() on tr.Id equals pay.FinancialTransaction.Id
+        group new { tag, pay } by new { tag.TagValue.Id, pay.Date.Month, pay.Date.Year } into g
+        select new SummaryValue(g.Key.Id, g.Key.Month, g.Key.Year, g.Sum(x => x.pay.Value)))
+        .ToListAsync();
+    }
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+    private bool HasTransactions(DateOnly firstDayOfMonth, int tagValueId)
+    {
+        return summaries.Any(s => s.TagValueId == tagValueId && s.Month == firstDayOfMonth.Month);
+    }
+
+    private string GetFormattedSummaryValue(DateOnly firstDayOfMonth, int tagValueId)
+    {
+        var total = decimal.Zero;
+
+        if (HasTransactions(firstDayOfMonth, tagValueId))
+        {
+            total = summaries.First(s => s.TagValueId == tagValueId && s.Month == firstDayOfMonth.Month).Total;
+        }
+
+        return total.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+    }
+
+    record SummaryValue(int TagValueId, int Month, int Year, decimal Total);
+}
+
+<PageTitle>Início</PageTitle>
+
+<h1 class="display-4">Hello, world!</h1>
+
+<p class="lead">Welcome to your new app.</p>
+
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <tbody>
+            @foreach (var tag in tags)
+            {
+                <tr>
+                    <th>@tag.Name</th>
+                    @foreach (var month in months)
+                    {
+                        <th>@month.ToString("MMM")</th>
+                    }
+                </tr>
+                @foreach (var tagValue in tag.Values.OrderBy(v => v.Value))
+                {
+                    <tr>
+                        <td>@tagValue.Value</td>
+                        @foreach (var month in months)
+                        {
+                            <td style="text-align: right;">
+                                @if (HasTransactions(month, tagValue.Id))
+                                {
+                                    <a
+                                        href="/transactions?tagValueId=@tagValue.Id&startDate=@month.ToString("yyyy-MM-dd")&endDate=@month.AddMonths(1).AddDays(-1).ToString("yyyy-MM-dd")">
+                                        @GetFormattedSummaryValue(month, tagValue.Id)
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span>0,00</span>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+                <tr>
+                    <th colspan="@(months.Count() + 1)" style="height: 45px;border-right: none;border-left: none;"></th>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+
+@* <SurveyPrompt Title="How is Blazor working for you?" /> *@
