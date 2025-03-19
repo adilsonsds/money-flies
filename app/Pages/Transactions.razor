@@ -6,6 +6,7 @@
 @inject NavigationManager NavigationManager
 
 @code {
+    private string selectedDateType = "payment";
     private DateTime? startDate;
     private DateTime? endDate;
     private List<int> selectedTagValueIds = new();
@@ -24,12 +25,26 @@
 
         if (startDate.HasValue)
         {
-            query = query.Where(p => p.Date >= DateOnly.FromDateTime(startDate.Value));
+            if (selectedDateType == "payment")
+            {
+                query = query.Where(p => p.Date >= DateOnly.FromDateTime(startDate.Value));
+            }
+            else
+            {
+                query = query.Where(p => p.FinancialTransaction.Date >= DateOnly.FromDateTime(startDate.Value));
+            }
         }
 
         if (endDate.HasValue)
         {
-            query = query.Where(p => p.Date <= DateOnly.FromDateTime(endDate.Value));
+            if (selectedDateType == "payment")
+            {
+                query = query.Where(p => p.Date <= DateOnly.FromDateTime(endDate.Value));
+            }
+            else
+            {
+                query = query.Where(p => p.FinancialTransaction.Date <= DateOnly.FromDateTime(endDate.Value));
+            }
         }
 
         if (selectedTagValueIds.Any())
@@ -37,7 +52,16 @@
             query = query.Where(p => p.FinancialTransaction.Tags.Any(t => selectedTagValueIds.Contains(t.TagValue.Id)));
         }
 
-        transactionPayments = await query.OrderByDescending(p => p.Date).ToListAsync();
+        if (selectedDateType == "payment")
+        {
+            query = query.OrderByDescending(p => p.Date).ThenByDescending(p => p.FinancialTransaction.Date);
+        }
+        else
+        {
+            query = query.OrderByDescending(p => p.FinancialTransaction.Date).ThenByDescending(p => p.Date);
+        }
+
+        transactionPayments = await query.ToListAsync();
     }
 
     private async Task ApplyFilter()
@@ -94,6 +118,13 @@
 <h1>Transações</h1>
 
 <div class="row mb-3">
+    <div class="col-3">
+        <label>Filtrar por</label>
+        <select class="form-control" @bind="selectedDateType">
+            <option value="registered">Data de registro</option>
+            <option value="payment">Data de pagamento</option>
+        </select>
+    </div>
     <div class="col-3">
         <label>Data inicial</label>
         <InputDate class="form-control" @bind-Value="startDate" />
