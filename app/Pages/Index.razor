@@ -107,7 +107,7 @@
                     <th>@tag.Name</th>
                     @foreach (var month in months)
                     {
-                        <th>@month.ToString("MMM")</th>
+                        <th style="text-align: right;">@month.ToString("MMM")</th>
                     }
                 </tr>
                 @foreach (var tagValue in tag.Values.OrderBy(v => v.Value))

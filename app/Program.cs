@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using app.Data;
+using app.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,8 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
+
+builder.Services.AddScoped<TransactionService>();
 
 var app = builder.Build();
 
