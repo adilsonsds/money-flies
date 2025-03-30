@@ -171,11 +171,12 @@ else
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="5" class="text-right">
-                    @transactionPayments.Sum(t => t.Value)
-                </td>
-                <td></td>
-            </tr>
-        </tfoot>
-    </table>
+                <td colspan="5" style="text-align: right;">
+                    @transactionPayments.Sum(t => t.Value).ToString("N2",
+                    System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))
+            </td>
+            <td></td>
+        </tr>
+    </tfoot>
+</table>
 }

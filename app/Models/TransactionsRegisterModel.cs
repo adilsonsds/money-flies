@@ -144,7 +144,7 @@ public static class TransactionsRegisterModelExtensions
                 Date = p.Date,
                 Paid = p.Paid,
                 Observation = p.Observation
-            })]
+            }).OrderBy(p => p.Date).ToList()],
         };
     }
 }
