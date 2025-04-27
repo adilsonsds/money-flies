@@ -57,4 +57,16 @@ public class TransactionService
 
         return await query.ToListAsync();
     }
+
+    public async Task UpdateTransactionPaymentStatus(FinancialTransactionPayment transactionPayment)
+    {
+        var existingPayment = await _dbContext.FinancialTransactionPayments
+            .FirstOrDefaultAsync(tp => tp.Id == transactionPayment.Id);
+
+        if (existingPayment != null)
+        {
+            existingPayment.Paid = transactionPayment.Paid;
+            await _dbContext.SaveChangesAsync();
+        }
+    }
 }

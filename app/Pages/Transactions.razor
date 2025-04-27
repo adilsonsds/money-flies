@@ -1,3 +1,5 @@
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
 @page "/transactions"
 @using Microsoft.AspNetCore.WebUtilities
 @using app.Data
@@ -66,6 +68,13 @@
         int.TryParse(e.Value?.ToString(), out var selectedValue);
         if (selectedValue == 0) return;
         filter.SelectedTagValueIds.Add(selectedValue);
+    }
+
+    private async Task TogglePaymentStatus(FinancialTransactionPayment transactionPayment)
+    {
+        transactionPayment.Paid = !transactionPayment.Paid;
+        await TransactionService.UpdateTransactionPaymentStatus(transactionPayment);
+        transactionPayments = await TransactionService.LoadTransactions(filter);
     }
 }
 
@@ -148,14 +157,16 @@ else
                         @transactionPayment.Date.ToString("dd/MM")
                     </td>
                     <td class="text-center">
-                        @if (transactionPayment.Paid)
-                        {
-                            <span class="badge bg-success">Pago</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-warning">Pendente</span>
-                        }
+                        <button class="btn p-0" @onclick="() => TogglePaymentStatus(transactionPayment)" title="Alterar Status">
+                            @if (transactionPayment.Paid)
+                            {
+                                <i class="fa-solid fa-check text-success"></i> <!-- Ícone para "Pago" -->
+                            }
+                            else
+                            {
+                                <i class="fa-solid fa-circle-xmark text-warning"></i> <!-- Ícone para "Pendente" -->
+                            }
+                        </button>
                     </td>
                     <td style="text-align: right;">
                         @transactionPayment.Value.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))
