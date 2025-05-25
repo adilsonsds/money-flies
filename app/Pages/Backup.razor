@@ -1,0 +1,114 @@
+@page "/backup"
+@using System.Text.Json
+@using System.Text
+@using app.Data
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext Db
+@inject IJSRuntime JS
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    public async Task DownloadBackup()
+    {
+        var transactions = await Db.FinancialTransactions.ToListAsync();
+
+        List<TransactionBackup> backup = new();
+
+        foreach (var transaction in transactions)
+        {
+            var transactionBackup = new TransactionBackup
+            {
+                Id = transaction.Id,
+                Name = transaction.Name,
+                Payments = new List<PaymentBackup>()
+            };
+
+            var payments = await Db.FinancialTransactionPayments
+            .Where(p => p.FinancialTransaction.Id == transaction.Id)
+            .ToListAsync();
+
+            var tags = await Db.FinancialTransactionTags
+            .Include(t => t.TagValue)
+            .Include(t => t.Tag)
+            .Where(t => t.FinancialTransaction.Id == transaction.Id)
+            .ToListAsync();
+
+            foreach (var payment in payments)
+            {
+                var paymentBackup = new PaymentBackup
+                {
+                    Id = payment.Id,
+                    Value = payment.Value,
+                    TransactionDate = transaction.Date,
+                    PaymentDate = payment.Date,
+                    Paid = payment.Paid,
+                    Observation = payment.Observation,
+                    Tags = new List<TagBackup>()
+                };
+
+                foreach (var financialTag in tags)
+                {
+                    var tagBackup = new TagBackup
+                    {
+                        Id = financialTag.Tag.Id,
+                        Name = financialTag.Tag.Name,
+                        Value = financialTag.TagValue.Value
+                    };
+
+                    paymentBackup.Tags.Add(tagBackup);
+                }
+
+                transactionBackup.Payments.Add(paymentBackup);
+            }
+
+            backup.Add(transactionBackup);
+        }
+
+        var fileName = $"backup-{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.json";
+        var json = JsonSerializer.Serialize(backup);
+        var fileBytes = Encoding.UTF8.GetBytes(json);
+        var fileBase64 = Convert.ToBase64String(fileBytes);
+
+        var fileUrl = $"data:application/json;base64,{fileBase64}";
+
+        await JS.InvokeVoidAsync("downloadFileFromUrl", fileName, fileUrl);
+
+    }
+
+    record TransactionBackup
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public ICollection<PaymentBackup> Payments { get; set; } = [];
+    }
+
+    record PaymentBackup
+    {
+        public int Id { get; set; }
+        public decimal Value { get; set; }
+        public DateOnly TransactionDate { get; set; }
+        public DateOnly PaymentDate { get; set; }
+        public bool Paid { get; set; }
+        public string? Observation { get; set; }
+        public ICollection<TagBackup> Tags { get; set; } = [];
+    }
+
+    record TagBackup
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+    }
+}
+
+
+<PageTitle>Backup</PageTitle>
+
+<h1>Backup</h1>
+<p>
+    <button class="btn btn-primary" @onclick="DownloadBackup">Download Backup</button>
+</p>
