@@ -10,14 +10,16 @@
     [Parameter]
     public int? Id { get; set; }
     private int? copyById;
-    private TransactionsRegisterModel model = new();
     private string PageTitle => Id.HasValue ? "Editar transação" : "Nova transação";
     private string PageToReturn => "/transactions";
-    private IEnumerable<Tag> tags = Array.Empty<Tag>();
+    private Profile Profile;
+    private BatchModel Model = new();
+    private IEnumerable<Tag> Tags = Array.Empty<Tag>();
 
     protected override async Task OnInitializedAsync()
     {
-        tags = await Db.Tags.Include(tv => tv.Values).ToListAsync();
+        Profile = await Db.Profiles.FirstAsync();
+        Tags = await Db.Tags.Include(tv => tv.Values).ToListAsync();
 
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
         if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("copyBy", out var copyByValue))
@@ -29,46 +31,189 @@
 
         if (transactionIdToLoad.HasValue)
         {
-            var entity = await Db.FinancialTransactions
-            .Include(f => f.Payments)
-            .Include(f => f.Tags).ThenInclude(p => p.TagValue)
-            .SingleOrDefaultAsync(c => c.Id.Equals(transactionIdToLoad.Value));
+            var batch = await Db.FinancialTransactions
+            .Where(c => c.Id.Equals(transactionIdToLoad.Value) && c.Batch.Profile.Id == Profile.Id)
+            .Select(c => c.Batch)
+            .FirstOrDefaultAsync();
 
-            if (entity is not null)
+            if (batch is not null)
             {
-                model = entity.ToModel();
+                Model.Id = batch.Id;
+                Model.Name = batch.Name;
+                Model.Transactions = [];
 
-                if (copyById.HasValue)
+                var transactions = await Db.FinancialTransactions
+                .Where(t => t.Batch.Id == batch.Id)
+                .ToListAsync();
+
+                foreach (var transaction in transactions)
                 {
-                    Id = null;
-                    model.Payments.ForEach(p => p.Id = null);
+                    TransactionModel transactionModel = new()
+                    {
+                        Id = transaction.Id,
+                        EmissionDate = transaction.EmissionDate,
+                        DueDate = transaction.DueDate,
+                        TransactionDate = transaction.TransactionDate,
+                        Observation = transaction.Observation,
+                        Value = transaction.Value,
+                        IsEntry = transaction.IsEntry,
+                        Status = (int)transaction.Status
+                    };
+
+                    Model.Transactions.Add(transactionModel);
+
+                    var tags = await Db.FinancialTransactionTags
+                    .Where(t => t.FinancialTransaction.Id == transaction.Id)
+                    .Include(t => t.TagValue).ThenInclude(t => t.Tag)
+                    .ToListAsync();
+
+                    foreach (var tag in tags)
+                    {
+                        transactionModel.Tags.Add(new TagValueModel
+                        {
+                            Id = tag.TagValue.Tag.Id,
+                            Name = tag.TagValue.Tag.Name,
+                            ValueName = tag.TagValue.Value,
+                            ValueId = tag.TagValue.Id
+                        });
+                    }
                 }
             }
-            else
+
+            if (copyById.HasValue)
             {
-                NavigationManager.NavigateTo(PageToReturn);
+                Model.Id = null;
+                Model.Transactions.ForEach(t => t.Id = null);
             }
         }
         else
         {
-            model.AddEmptyPayment();
+            AddTransaction();
+        }
+    }
+
+    private void AddTransaction()
+    {
+        var lastTransaction = Model.Transactions.LastOrDefault();
+
+        if (lastTransaction is not null)
+        {
+            var copyOfLastTransaction = new TransactionModel
+            {
+                EmissionDate = lastTransaction.EmissionDate,
+                DueDate = lastTransaction.DueDate,
+                TransactionDate = lastTransaction.TransactionDate,
+                Observation = lastTransaction.Observation,
+                Value = lastTransaction.Value,
+                IsEntry = lastTransaction.IsEntry,
+                Status = lastTransaction.Status,
+                Tags = new List<TagValueModel>(lastTransaction.Tags)
+            };
+
+            Model.Transactions.Add(copyOfLastTransaction);
+        }
+        else
+        {
+            var initialTransaction = new TransactionModel
+            {
+                EmissionDate = DateOnly.FromDateTime(DateTime.Now),
+                DueDate = DateOnly.FromDateTime(DateTime.Now),
+                TransactionDate = DateOnly.FromDateTime(DateTime.Now),
+                Observation = string.Empty,
+                Value = 0,
+                IsEntry = true,
+                Status = (int)FinancialTransactionStatus.Pending,
+                Tags = new List<TagValueModel>()
+            };
+
+            Model.Transactions.Add(initialTransaction);
         }
     }
 
     private async Task HandleValidSubmit()
     {
-        var allTagValues = tags.SelectMany(t => t.Values).ToList();
+        FinancialTransactionBatch? batch = null;
 
-        if (Id.HasValue)
+        if (Model.Id.HasValue)
         {
-            var entity = await Db.FinancialTransactions.SingleAsync(c => c.Id.Equals(Id.Value));
-            entity.UpdateFromModel(model, allTagValues);
-            Db.FinancialTransactions.Update(entity);
+            batch = await Db.FinancialTransactionBatches.SingleAsync(c => c.Id.Equals(Model.Id!.Value) && c.Profile.Id == Profile.Id);
+        }
+
+        if (batch is null)
+        {
+            batch = new FinancialTransactionBatch();
+            batch.Profile = Profile;
+        }    
+
+        batch.Name = Model.Name;
+
+        foreach (var transactionModel in Model.Transactions)
+        {
+            FinancialTransaction? transaction = null;
+
+            if (transactionModel.Id.HasValue)
+            {
+                transaction = await Db.FinancialTransactions.Include(t => t.Tags).ThenInclude(t => t.TagValue)
+                .SingleOrDefaultAsync(c => c.Id.Equals(transactionModel.Id.Value) && c.Batch.Id == batch.Id);
+            }
+
+            if (transaction is null)
+            {
+                transaction = new FinancialTransaction();
+                transaction.Batch = batch;
+                batch.Transactions.Add(transaction);
+            }
+
+            transaction.EmissionDate = transactionModel.EmissionDate;
+            transaction.DueDate = transactionModel.DueDate;
+            transaction.TransactionDate = transactionModel.TransactionDate;
+            transaction.Observation = transactionModel.Observation;
+            transaction.Value = transactionModel.Value;
+            transaction.IsEntry = transactionModel.IsEntry;
+            transaction.Status = (FinancialTransactionStatus)transactionModel.Status;
+
+            foreach (var tagModel in transactionModel.Tags)
+            {
+                var tagValue = await Db.TagValues.Include(tv => tv.Tag).SingleAsync(tv => tv.Id == tagModel.ValueId);
+
+                var existingTag = transaction.Tags.FirstOrDefault(t => t.TagValue.Id == tagValue.Id);
+                if (existingTag is null)
+                {
+                    transaction.Tags.Add(new FinancialTransactionTag
+                    {
+                        FinancialTransaction = transaction,
+                        Tag = tagValue.Tag,
+                        TagValue = tagValue
+                    });
+                }
+            }
+
+            var removedTags = transaction.Tags
+            .Where(t => t.Id > 0 && !transactionModel.Tags.Any(tm => tm.ValueId == t.TagValue.Id))
+            .ToList();
+
+            foreach (var removedTag in removedTags)
+            {
+                transaction.Tags.Remove(removedTag);
+            }
+        }
+
+        var removedTransactions = batch.Transactions
+        .Where(t => t.Id > 0 && !Model.Transactions.Any(mt => mt.Id.HasValue && mt.Id.Value == t.Id))
+        .ToList();
+
+        foreach (var removedTransaction in removedTransactions)
+        {
+            batch.Transactions.Remove(removedTransaction);
+        }
+
+        if (batch.Id > 0)
+        {
+            Db.FinancialTransactionBatches.Update(batch);
         }
         else
         {
-            var entity = model.ToEntity(allTagValues);
-            Db.FinancialTransactions.Add(entity);
+            await Db.FinancialTransactionBatches.AddAsync(batch);
         }
 
         await Db.SaveChangesAsync();
@@ -77,21 +222,30 @@
 
     private async Task DeleteEntity()
     {
-        var entity = await Db.FinancialTransactions.SingleAsync(c => c.Id.Equals(Id!.Value));
+        var batch = await Db.FinancialTransactionBatches.SingleAsync(c => c.Id.Equals(Model.Id!.Value));
 
-        Db.FinancialTransactions.Remove(entity);
+        Db.FinancialTransactionBatches.Remove(batch);
         await Db.SaveChangesAsync();
 
         NavigationManager.NavigateTo(PageToReturn);
     }
 
-    private void UpdateSelectedTags(ChangeEventArgs e, IEnumerable<TagValue> tagValues)
+    private void UpdateSelectedTags(ChangeEventArgs e, TransactionModel transactionModel, IEnumerable<TagValue> tagValues)
     {
-        model.TagValueIds.RemoveAll(id => tagValues.Any(tv => tv.Id == id));
+        transactionModel.Tags.RemoveAll(tagModel => tagValues.Any(tv => tv.Id == tagModel.ValueId));
 
         int.TryParse(e.Value?.ToString(), out var selectedValue);
         if (selectedValue == 0) return;
-        model.TagValueIds.Add(selectedValue);
+        var tagValue = tagValues.FirstOrDefault(tv => tv.Id == selectedValue);
+        if (tagValue is null) return;
+
+        transactionModel.Tags.Add(new TagValueModel
+        {
+            Id = tagValue.Tag.Id,
+            Name = tagValue.Tag.Name,
+            ValueName = tagValue.Value,
+            ValueId = tagValue.Id
+        });
     }
 }
 
@@ -99,18 +253,15 @@
 
 <h1 class="text-left my-4">@PageTitle</h1>
 
-<EditForm Model="model" OnValidSubmit="HandleValidSubmit" class="container mb-3">
+<EditForm Model="Model" OnValidSubmit="HandleValidSubmit" class="container-fluid mb-3">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
-    <div class="form-group">
-        <label for="tr-name">Nome</label>
-        <InputText id="tr-name" class="form-control" @bind-Value="model.Name" />
-    </div>
-
-    <div class="form-group">
-        <label for="date">Data</label>
-        <InputDate id="date" class="form-control" @bind-Value="model.Date" />
+    <div class="row mb-3">
+        <div class="col-12 col-md-8 col-lg-6">
+            <label for="tr-name">Nome</label>
+            <InputText id="tr-name" class="form-control" @bind-Value="Model.Name" />
+        </div>
     </div>
 
     <div class="row mb-3">
@@ -122,42 +273,78 @@
     <table class="table">
         <thead>
             <tr>
-                <th style="width: 5%;">#</th>
-                <th style="width: 20%;">Data</th>
-                <th style="width: 30%;">Observação</th>
-                <th style="width: 15%;">Status</th>
-                <th style="width: 20%;">Valor</th>
-                <th style="width: 10%;">Ações</th>
+                <th>#</th>
+                <th>Tipo</th>
+                <th>Emissão em</th>
+                <th>Status</th>
+                <th>Observação</th>
+                <th>Valor</th>
+                <th>Vencimento em</th>
+                <th>Movimentação em</th>
+                @foreach (var tag in Tags)
+                {
+                    <th>@tag.Name</th>
+                }
+                <th>Ações</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var item in model.Payments)
+            @foreach (var item in Model.Transactions)
             {
                 <tr>
                     <td>
-                        <strong>@(model.Payments.IndexOf(item) + 1)</strong>
+                        <strong>@(Model.Transactions.IndexOf(item) + 1)</strong>
                     </td>
                     <td>
-                        <InputDate class="form-control" @bind-Value="item.Date" />
-                        <ValidationMessage For="@(() => item.Date)" class="text-danger" />
+                        <InputSelect class="form-control" @bind-Value="item.IsEntry">
+                            <option value="true">Entrada</option>
+                            <option value="false">Saída</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => item.IsEntry)" class="text-danger" />
+                    </td>
+                    <td>
+                        <InputDate class="form-control" @bind-Value="item.EmissionDate" />
+                        <ValidationMessage For="@(() => item.EmissionDate)" class="text-danger" />
+                    </td>
+                    <td>
+                        <InputSelect class="form-control" @bind-Value="item.Status">
+                            <option value="0">Pendente</option>
+                            <option value="1">Pago</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => item.Status)" class="text-danger" />
                     </td>
                     <td>
                         <InputText class="form-control" @bind-Value="item.Observation" />
                         <ValidationMessage For="@(() => item.Observation)" class="text-danger" />
                     </td>
                     <td>
-                        <InputSelect class="form-control" @bind-Value="item.Paid">
-                            <option value="false">Pendente</option>
-                            <option value="true">Pago</option>
-                        </InputSelect>
-                        <ValidationMessage For="@(() => item.Paid)" class="text-danger" />
-                    </td>
-                    <td>
                         <InputNumber class="form-control" @bind-Value="item.Value" />
                         <ValidationMessage For="@(() => item.Value)" class="text-danger" />
                     </td>
                     <td>
-                        <button type="button" class="btn btn-sm btn-danger" @onclick="() => model.Payments.Remove(item)">
+                        <InputDate class="form-control" @bind-Value="item.DueDate" />
+                        <ValidationMessage For="@(() => item.DueDate)" class="text-danger" />
+                    </td>
+                    <td>
+                        <InputDate class="form-control" @bind-Value="item.TransactionDate" />
+                        <ValidationMessage For="@(() => item.TransactionDate)" class="text-danger" />
+                    </td>
+                    @foreach (var tag in Tags)
+                    {
+                        <td>
+                            <select id="tags" class="form-control" @onchange="(e) => UpdateSelectedTags(e, item, tag.Values)">
+                                <option value="0">Selecione...</option>
+                                @foreach (var tagValue in tag.Values.OrderBy(tv => tv.Value).ToList())
+                                {
+                                    <option value="@tagValue.Id" selected="@item.Tags.Any(p => p.ValueId == tagValue.Id)">
+                                        @tagValue.Value</option>
+                                }
+                            </select>
+                        </td>
+                    }
+                    <td>
+                        <button type="button" class="btn btn-sm btn-danger"
+                            @onclick="() => Model.Transactions.Remove(item)">
                             Remover
                         </button>
                     </td>
@@ -166,14 +353,14 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="5">
+                <td colspan="@(8 + Tags.Count())">
                     <div class="d-flex justify-content-end">
                         <span>Total:</span>
-                        <strong>@model.Payments.Sum(p => p.Value)</strong>
+                        <strong>@Model.Transactions.Sum(p => p.Value)</strong>
                     </div>
                 </td>
                 <td>
-                    <button type="button" class="btn btn-sm btn-secondary" @onclick="() => model.AddEmptyPayment()">
+                    <button type="button" class="btn btn-sm btn-secondary" @onclick="() => AddTransaction()">
                         Adicionar
                     </button>
                 </td>
@@ -181,24 +368,8 @@
         </tfoot>
     </table>
 
-    <h2 class="text-left my-4">Tags</h2>
-
-    @foreach (var tag in tags)
-    {
-        <div class="form-group">
-            <label for="tags">@tag.Name</label>
-            <select id="tags" class="form-control" @onchange="(e) => UpdateSelectedTags(e, tag.Values)">
-                <option value="0">Selecione...</option>
-                @foreach (var tagValue in tag.Values.OrderBy(tv => tv.Value).ToList())
-                {
-                    <option value="@tagValue.Id" selected="@model.TagValueIds.Contains(tagValue.Id)">@tagValue.Value</option>
-                }
-            </select>
-        </div>
-    }
-
     <div class="d-flex justify-content-between align-items-center my-4">
-        @if (Id.HasValue)
+        @if (Model.Id.HasValue)
         {
             <button type="button" class="btn btn-danger" @onclick="DeleteEntity">
                 Excluir

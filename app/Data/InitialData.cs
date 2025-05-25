@@ -2,10 +2,18 @@ namespace app.Data;
 
 public class InitialData
 {
+    public static IEnumerable<Profile> Profiles =>
+    [
+        new() { Id = 1, Name = "Pessoal" },
+        new() { Id = 2, Name = "Investimentos" },
+        new() { Id = 3, Name = "Empresarial" },
+        new() { Id = 4, Name = "Familiar" },
+    ];
+
     public static IEnumerable<Tag> Tags =>
     [
-        new() { Id = 1, Name = "Tipo" },
-        new() { Id = 2, Name = "Categoria" }
+        new() { Id = 1, Name = "Tipo", ProfileId = 1 },
+        new() { Id = 2, Name = "Categoria", ProfileId = 1 },
     ];
 
     public static IEnumerable<TagValue> TagValues =>

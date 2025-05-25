@@ -14,22 +14,7 @@ namespace app.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "FinancialTransactions",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Amount = table.Column<decimal>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 280, nullable: false),
-                    Date = table.Column<DateOnly>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_FinancialTransactions", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Tags",
+                name: "Profiles",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
@@ -38,28 +23,71 @@ namespace app.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Tags", x => x.Id);
+                    table.PrimaryKey("PK_Profiles", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "FinancialTransactionPayments",
+                name: "FinancialTransactionBatches",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    FinancialTransactionId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Value = table.Column<decimal>(type: "TEXT", nullable: false),
-                    Date = table.Column<DateOnly>(type: "TEXT", nullable: false),
-                    Paid = table.Column<bool>(type: "INTEGER", nullable: false),
-                    Observation = table.Column<string>(type: "TEXT", nullable: true)
+                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    ProfileId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_FinancialTransactionPayments", x => x.Id);
+                    table.PrimaryKey("PK_FinancialTransactionBatches", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_FinancialTransactionPayments_FinancialTransactions_FinancialTransactionId",
-                        column: x => x.FinancialTransactionId,
-                        principalTable: "FinancialTransactions",
+                        name: "FK_FinancialTransactionBatches_Profiles_ProfileId",
+                        column: x => x.ProfileId,
+                        principalTable: "Profiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tags",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    ProfileId = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tags", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Tags_Profiles_ProfileId",
+                        column: x => x.ProfileId,
+                        principalTable: "Profiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FinancialTransactions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    BatchId = table.Column<int>(type: "INTEGER", nullable: false),
+                    EmissionDate = table.Column<DateOnly>(type: "TEXT", nullable: true),
+                    DueDate = table.Column<DateOnly>(type: "TEXT", nullable: true),
+                    TransactionDate = table.Column<DateOnly>(type: "TEXT", nullable: true),
+                    Observation = table.Column<string>(type: "TEXT", nullable: true),
+                    Value = table.Column<decimal>(type: "TEXT", nullable: false),
+                    IsEntry = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FinancialTransactions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_FinancialTransactions_FinancialTransactionBatches_BatchId",
+                        column: x => x.BatchId,
+                        principalTable: "FinancialTransactionBatches",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -118,12 +146,23 @@ namespace app.Migrations
                 });
 
             migrationBuilder.InsertData(
-                table: "Tags",
+                table: "Profiles",
                 columns: new[] { "Id", "Name" },
                 values: new object[,]
                 {
-                    { 1, "Tipo" },
-                    { 2, "Categoria" }
+                    { 1, "Pessoal" },
+                    { 2, "Investimentos" },
+                    { 3, "Empresarial" },
+                    { 4, "Familiar" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Tags",
+                columns: new[] { "Id", "Name", "ProfileId" },
+                values: new object[,]
+                {
+                    { 1, "Tipo", 1 },
+                    { 2, "Categoria", 1 }
                 });
 
             migrationBuilder.InsertData(
@@ -170,9 +209,14 @@ namespace app.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_FinancialTransactionPayments_FinancialTransactionId",
-                table: "FinancialTransactionPayments",
-                column: "FinancialTransactionId");
+                name: "IX_FinancialTransactionBatches_ProfileId",
+                table: "FinancialTransactionBatches",
+                column: "ProfileId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FinancialTransactions_BatchId",
+                table: "FinancialTransactions",
+                column: "BatchId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_FinancialTransactionTags_FinancialTransactionId",
@@ -190,6 +234,11 @@ namespace app.Migrations
                 column: "TagValueId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Tags_ProfileId",
+                table: "Tags",
+                column: "ProfileId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_TagValues_TagId",
                 table: "TagValues",
                 column: "TagId");
@@ -198,9 +247,6 @@ namespace app.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "FinancialTransactionPayments");
-
             migrationBuilder.DropTable(
                 name: "FinancialTransactionTags");
 
@@ -211,7 +257,13 @@ namespace app.Migrations
                 name: "TagValues");
 
             migrationBuilder.DropTable(
+                name: "FinancialTransactionBatches");
+
+            migrationBuilder.DropTable(
                 name: "Tags");
+
+            migrationBuilder.DropTable(
+                name: "Profiles");
         }
     }
 }

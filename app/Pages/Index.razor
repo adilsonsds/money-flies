@@ -18,30 +18,30 @@
     {
         tags = Db.Tags.Include(t => t.Values).ToList();
 
-        var payments = Db.FinancialTransactionPayments.AsQueryable();
+        var transactions = Db.FinancialTransactions.AsQueryable();
 
         if (paymentStatus == PaymentStatusEnum.Only_Paid)
         {
-            payments = payments.Where(p => p.Paid);
+            transactions = transactions.Where(p => p.Status == FinancialTransactionStatus.Paid);
         }
         else if (paymentStatus == PaymentStatusEnum.Only_Pending)
         {
-            payments = payments.Where(p => !p.Paid);
+            transactions = transactions.Where(p => p.Status == FinancialTransactionStatus.Pending);
         }
 
         summaries = await (
-        from tr_pay in payments
-        join tr in Db.FinancialTransactions.AsQueryable() on tr_pay.FinancialTransaction.Id equals tr.Id
-        join tr_tag in Db.FinancialTransactionTags.AsQueryable() on tr.Id equals tr_tag.FinancialTransaction.Id
-        group new { tr_tag, pay = tr_pay } by new
-        {
-            TagId = tr_tag.Tag.Id,
-            TagValueId = tr_tag.TagValue.Id,
-            tr_pay.Date.Month,
-            tr_pay.Date.Year
-        } into g
-        select new SummaryValue(g.Key.TagId, g.Key.TagValueId, g.Key.Month, g.Key.Year, g.Sum(x => x.pay.Value)))
-        .ToListAsync();
+            from tr_pay in transactions
+            join tr_tag in Db.FinancialTransactionTags.AsQueryable() on tr_pay.Id equals tr_tag.FinancialTransaction.Id
+            where tr_pay.TransactionDate != null
+            group new { tr_tag, pay = tr_pay } by new
+            {
+                TagId = tr_tag.Tag.Id,
+                TagValueId = tr_tag.TagValue.Id,
+                tr_pay.TransactionDate!.Value.Month,
+                tr_pay.TransactionDate!.Value.Year
+            } into g
+            select new SummaryValue(g.Key.TagId, g.Key.TagValueId, g.Key.Month, g.Key.Year, g.Sum(x => x.pay.Value)))
+            .ToListAsync();
     }
 
     private bool HasTransactions(DateOnly firstDayOfMonth, int tagValueId)

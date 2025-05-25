@@ -11,7 +11,7 @@ using app.Data;
 namespace app.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250308174016_InitialCreate")]
+    [Migration("20250525223151_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -26,48 +26,56 @@ namespace app.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(280)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("FinancialTransactions");
-                });
-
-            modelBuilder.Entity("app.Data.FinancialTransactionPayment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("BatchId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateOnly>("Date")
+                    b.Property<DateOnly?>("DueDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("FinancialTransactionId")
+                    b.Property<DateOnly?>("EmissionDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsEntry")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Observation")
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("Paid")
+                    b.Property<int>("Status")
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly?>("TransactionDate")
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal>("Value")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FinancialTransactionId");
+                    b.HasIndex("BatchId");
 
-                    b.ToTable("FinancialTransactionPayments");
+                    b.ToTable("FinancialTransactions");
+                });
+
+            modelBuilder.Entity("app.Data.FinancialTransactionBatch", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProfileId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProfileId");
+
+                    b.ToTable("FinancialTransactionBatches");
                 });
 
             modelBuilder.Entity("app.Data.FinancialTransactionTag", b =>
@@ -96,7 +104,7 @@ namespace app.Migrations
                     b.ToTable("FinancialTransactionTags");
                 });
 
-            modelBuilder.Entity("app.Data.Tag", b =>
+            modelBuilder.Entity("app.Data.Profile", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -109,18 +117,63 @@ namespace app.Migrations
 
                     b.HasKey("Id");
 
+                    b.ToTable("Profiles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Pessoal"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Investimentos"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Empresarial"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Familiar"
+                        });
+                });
+
+            modelBuilder.Entity("app.Data.Tag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProfileId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProfileId");
+
                     b.ToTable("Tags");
 
                     b.HasData(
                         new
                         {
                             Id = 1,
-                            Name = "Tipo"
+                            Name = "Tipo",
+                            ProfileId = 1
                         },
                         new
                         {
                             Id = 2,
-                            Name = "Categoria"
+                            Name = "Categoria",
+                            ProfileId = 1
                         });
                 });
 
@@ -363,15 +416,26 @@ namespace app.Migrations
                         });
                 });
 
-            modelBuilder.Entity("app.Data.FinancialTransactionPayment", b =>
+            modelBuilder.Entity("app.Data.FinancialTransaction", b =>
                 {
-                    b.HasOne("app.Data.FinancialTransaction", "FinancialTransaction")
-                        .WithMany("Payments")
-                        .HasForeignKey("FinancialTransactionId")
+                    b.HasOne("app.Data.FinancialTransactionBatch", "Batch")
+                        .WithMany("Transactions")
+                        .HasForeignKey("BatchId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("FinancialTransaction");
+                    b.Navigation("Batch");
+                });
+
+            modelBuilder.Entity("app.Data.FinancialTransactionBatch", b =>
+                {
+                    b.HasOne("app.Data.Profile", "Profile")
+                        .WithMany()
+                        .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Profile");
                 });
 
             modelBuilder.Entity("app.Data.FinancialTransactionTag", b =>
@@ -401,6 +465,17 @@ namespace app.Migrations
                     b.Navigation("TagValue");
                 });
 
+            modelBuilder.Entity("app.Data.Tag", b =>
+                {
+                    b.HasOne("app.Data.Profile", "Profile")
+                        .WithMany()
+                        .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Profile");
+                });
+
             modelBuilder.Entity("app.Data.TagValue", b =>
                 {
                     b.HasOne("app.Data.Tag", "Tag")
@@ -414,9 +489,12 @@ namespace app.Migrations
 
             modelBuilder.Entity("app.Data.FinancialTransaction", b =>
                 {
-                    b.Navigation("Payments");
-
                     b.Navigation("Tags");
+                });
+
+            modelBuilder.Entity("app.Data.FinancialTransactionBatch", b =>
+                {
+                    b.Navigation("Transactions");
                 });
 
             modelBuilder.Entity("app.Data.Tag", b =>

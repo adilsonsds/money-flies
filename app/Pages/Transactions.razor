@@ -3,28 +3,26 @@
 @page "/transactions"
 @using Microsoft.AspNetCore.WebUtilities
 @using app.Data
-@using app.Services
 @using app.Models
 @using Microsoft.EntityFrameworkCore
 @inject AppDbContext Db
 @inject NavigationManager NavigationManager
-@inject TransactionService TransactionService
 
 @code {
     private TransactionFilter filter = new();
 
-    private IEnumerable<FinancialTransactionPayment> transactionPayments = Array.Empty<FinancialTransactionPayment>();
+    private IEnumerable<FinancialTransaction> transactions = Array.Empty<FinancialTransaction>();
     private IEnumerable<Tag> tags = new List<Tag>();
 
     protected override async Task OnInitializedAsync()
     {
         SetDefaultFilter();
-        transactionPayments = await TransactionService.LoadTransactions(filter);
+        transactions = await LoadTransactions(filter);
     }
 
     async Task ApplyFilter()
     {
-        transactionPayments = await TransactionService.LoadTransactions(filter);
+        transactions = await LoadTransactions(filter);
     }
 
     private void SetDefaultFilter()
@@ -58,7 +56,7 @@
     async Task ResetFilter()
     {
         SetDefaultFilter();
-        transactionPayments = await TransactionService.LoadTransactions(filter);
+        transactions = await LoadTransactions(filter);
     }
 
     private void UpdateSelectedTags(ChangeEventArgs e, IEnumerable<TagValue> tagValues)
@@ -70,11 +68,71 @@
         filter.SelectedTagValueIds.Add(selectedValue);
     }
 
-    private async Task TogglePaymentStatus(FinancialTransactionPayment transactionPayment)
+    private async Task TogglePaymentStatus(FinancialTransaction transaction)
     {
-        transactionPayment.Paid = !transactionPayment.Paid;
-        await TransactionService.UpdateTransactionPaymentStatus(transactionPayment);
-        transactionPayments = await TransactionService.LoadTransactions(filter);
+        transaction.Status = transaction.Status == FinancialTransactionStatus.Paid
+        ? FinancialTransactionStatus.Pending
+        : FinancialTransactionStatus.Paid;
+
+        Db.FinancialTransactions.Update(transaction);
+        await Db.SaveChangesAsync();
+    }
+
+    private async Task<IEnumerable<FinancialTransaction>> LoadTransactions(TransactionFilter filter)
+    {
+        var query = Db.FinancialTransactions.Include(p => p.Batch).AsQueryable();
+
+        if (filter.StartDate.HasValue)
+        {
+            if (filter.SelectedDateType == "due")
+            {
+                query = query.Where(p => p.DueDate >= DateOnly.FromDateTime(filter.StartDate.Value));
+            }
+            else if (filter.SelectedDateType == "emission")
+            {
+                query = query.Where(p => p.EmissionDate >= DateOnly.FromDateTime(filter.StartDate.Value));
+            }
+            else
+            {
+                query = query.Where(p => p.TransactionDate >= DateOnly.FromDateTime(filter.StartDate.Value));
+            }
+        }
+
+        if (filter.EndDate.HasValue)
+        {
+            if (filter.SelectedDateType == "due")
+            {
+                query = query.Where(p => p.DueDate <= DateOnly.FromDateTime(filter.EndDate.Value));
+            }
+            else if (filter.SelectedDateType == "emission")
+            {
+                query = query.Where(p => p.EmissionDate <= DateOnly.FromDateTime(filter.EndDate.Value));
+            }
+            else
+            {
+                query = query.Where(p => p.TransactionDate <= DateOnly.FromDateTime(filter.EndDate.Value));
+            }
+        }
+
+        if (filter.SelectedTagValueIds.Any())
+        {
+            query = query.Where(p => p.Tags.Any(t => filter.SelectedTagValueIds.Contains(t.TagValue.Id)));
+        }
+
+        if (filter.SelectedDateType == "due")
+        {
+            query = query.OrderByDescending(p => p.DueDate);
+        }
+        else if (filter.SelectedDateType == "emission")
+        {
+            query = query.OrderByDescending(p => p.EmissionDate);
+        }
+        else
+        {
+            query = query.OrderByDescending(p => p.TransactionDate);
+        }
+
+        return await query.ToListAsync();
     }
 }
 
@@ -120,7 +178,7 @@
 
 <a href="/transactions/register" class="btn btn-primary">Nova transação</a>
 
-@if (transactionPayments == null)
+@if (transactions == null)
 {
     <p><em>Carregando...</em></p>
 }
@@ -129,36 +187,37 @@ else
     <table class="table">
         <thead>
             <tr>
-                <th class="col-2 text-center">Registrado em</th>
-                <th class="col-4 text-left">Descrição</th>
-                <th class="col-2 text-center">Pagamento em</th>
+                <th class="col-2 text-center">Emissão em</th>
+                <th class="col-2 text-left">Descrição</th>
+                <th class="col-2 text-center">Vence em</th>
                 <th class="col-1 text-center">Status</th>
+                <th class="col-2 text-center">Movimentado em</th>
                 <th class="col-1" style="text-align: right;">Valor</th>
                 <th class="col-2 text-center">Ações</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var transactionPayment in transactionPayments)
+            @foreach (var transaction in transactions)
             {
                 <tr>
                     <td class="text-center">
-                        @transactionPayment.FinancialTransaction.Date.ToString("dd/MM")
+                        @transaction.EmissionDate?.ToString("dd/MM")
                     </td>
                     <td class="text-left">
-                        <span>@transactionPayment.FinancialTransaction.Name</span>
+                        <span>@(transaction.IsEntry ? "Entrada" : "Saída") - @transaction.Batch.Name</span>
 
-                        @if (!string.IsNullOrEmpty(transactionPayment.Observation))
+                        @if (!string.IsNullOrEmpty(transaction.Observation))
                         {
                             <br />
-                            <small>@transactionPayment.Observation</small>
+                            <small>@transaction.Observation</small>
                         }
                     </td>
                     <td class="text-center">
-                        @transactionPayment.Date.ToString("dd/MM")
+                        @transaction.DueDate?.ToString("dd/MM")
                     </td>
                     <td class="text-center">
-                        <button class="btn p-0" @onclick="() => TogglePaymentStatus(transactionPayment)" title="Alterar Status">
-                            @if (transactionPayment.Paid)
+                        <button class="btn p-0" @onclick="() => TogglePaymentStatus(transaction)" title="Alterar status">
+                            @if (transaction.Status == FinancialTransactionStatus.Paid)
                             {
                                 <i class="fa-solid fa-check text-success"></i> <!-- Ícone para "Pago" -->
                             }
@@ -168,22 +227,23 @@ else
                             }
                         </button>
                     </td>
+                    <td class="text-center">
+                        @transaction.TransactionDate?.ToString("dd/MM")
+                    </td>
                     <td style="text-align: right;">
-                        @transactionPayment.Value.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))
+                        @transaction.Value.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))
                     </td>
                     <td class="text-center">
-                        <a href="/transactions/register/@transactionPayment.FinancialTransaction.Id"
-                            class="btn btn-secondary">Editar</a>
-                        <a href="/transactions/register?copyBy=@transactionPayment.FinancialTransaction.Id"
-                            class="btn btn-secondary">Clonar</a>
+                        <a href="/transactions/register/@transaction.Id" class="btn btn-secondary">Editar</a>
+                        <a href="/transactions/register?copyBy=@transaction.Id" class="btn btn-secondary">Clonar</a>
                     </td>
                 </tr>
             }
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="5" style="text-align: right;">
-                    @transactionPayments.Sum(t => t.Value).ToString("N2",
+                <td colspan="7" style="text-align: right;">
+                    @transactions.Sum(t => t.Value).ToString("N2",
                     System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))
             </td>
             <td></td>

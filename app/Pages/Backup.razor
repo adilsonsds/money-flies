@@ -14,39 +14,40 @@
 
     public async Task DownloadBackup()
     {
-        var transactions = await Db.FinancialTransactions.ToListAsync();
+        var batches = await Db.FinancialTransactionBatches.ToListAsync();
 
-        List<TransactionBackup> backup = new();
+        List<TransactionBatchBackup> backup = new();
 
-        foreach (var transaction in transactions)
+        foreach (var batch in batches)
         {
-            var transactionBackup = new TransactionBackup
+            var transactionBackup = new TransactionBatchBackup
             {
-                Id = transaction.Id,
-                Name = transaction.Name,
-                Payments = new List<PaymentBackup>()
+                Id = batch.Id,
+                Name = batch.Name,
+                Payments = new List<TransactionBatchItemBackup>()
             };
 
-            var payments = await Db.FinancialTransactionPayments
-            .Where(p => p.FinancialTransaction.Id == transaction.Id)
+            var transactions = await Db.FinancialTransactions
+            .Where(p => p.Batch.Id == batch.Id)
             .ToListAsync();
 
             var tags = await Db.FinancialTransactionTags
             .Include(t => t.TagValue)
             .Include(t => t.Tag)
-            .Where(t => t.FinancialTransaction.Id == transaction.Id)
+            .Where(t => t.FinancialTransaction.Id == batch.Id)
             .ToListAsync();
 
-            foreach (var payment in payments)
+            foreach (var transaction in transactions)
             {
-                var paymentBackup = new PaymentBackup
+                var paymentBackup = new TransactionBatchItemBackup
                 {
-                    Id = payment.Id,
-                    Value = payment.Value,
-                    TransactionDate = transaction.Date,
-                    PaymentDate = payment.Date,
-                    Paid = payment.Paid,
-                    Observation = payment.Observation,
+                    Id = transaction.Id,
+                    Value = transaction.Value,
+                    EmissionDate = transaction.EmissionDate,
+                    TransactionDate = transaction.TransactionDate,
+                    DueDate = transaction.DueDate,
+                    Paid = transaction.Status == FinancialTransactionStatus.Paid,
+                    Observation = transaction.Observation,
                     Tags = new List<TagBackup>()
                 };
 
@@ -79,19 +80,20 @@
 
     }
 
-    record TransactionBackup
+    record TransactionBatchBackup
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public ICollection<PaymentBackup> Payments { get; set; } = [];
+        public ICollection<TransactionBatchItemBackup> Payments { get; set; } = [];
     }
 
-    record PaymentBackup
+    record TransactionBatchItemBackup
     {
         public int Id { get; set; }
         public decimal Value { get; set; }
-        public DateOnly TransactionDate { get; set; }
-        public DateOnly PaymentDate { get; set; }
+        public DateOnly? EmissionDate { get; set; }
+        public DateOnly? TransactionDate { get; set; }
+        public DateOnly? DueDate { get; set; }
         public bool Paid { get; set; }
         public string? Observation { get; set; }
         public ICollection<TagBackup> Tags { get; set; } = [];
