@@ -1,10 +1,13 @@
 @page "/backup"
 @using System.Text.Json
 @using System.Text
+@using System.Text.RegularExpressions
 @using app.Data
 @using Microsoft.EntityFrameworkCore
+@using app.Models
 @inject AppDbContext Db
 @inject IJSRuntime JS
+@inject NavigationManager NavigationManager
 
 @code {
     protected override async Task OnInitializedAsync()
@@ -14,99 +17,250 @@
 
     public async Task DownloadBackup()
     {
-        var batches = await Db.FinancialTransactionBatches.ToListAsync();
+        var tags = await Db.Tags.OrderBy(t => t.Name).AsNoTracking().ToListAsync();
+        var batches = await Db.FinancialTransactionBatches.Include(p => p.Profile).AsNoTracking().ToListAsync();
 
-        List<TransactionBatchBackup> backup = new();
+        var csv = new StringBuilder();
+
+        List<string> header = new();
+        header.Add("Perfil");
+        header.Add("Tipo");
+        header.Add("Data de Emissão");
+        header.Add("Status");
+        header.Add("Nome");
+        header.Add("Observação");
+        header.Add("Valor");
+        header.Add("Vencimento");
+        header.Add("Data de Movimentação");
+
+        foreach (var tag in tags)
+        {
+            header.Add(tag.Name);
+        }
+
+        csv.AppendLine(string.Join(",", header));
 
         foreach (var batch in batches)
         {
-            var transactionBackup = new TransactionBatchBackup
-            {
-                Id = batch.Id,
-                Name = batch.Name,
-                Payments = new List<TransactionBatchItemBackup>()
-            };
-
             var transactions = await Db.FinancialTransactions
             .Where(p => p.Batch.Id == batch.Id)
+            .AsNoTracking()
             .ToListAsync();
 
-            var tags = await Db.FinancialTransactionTags
-            .Include(t => t.TagValue)
-            .Include(t => t.Tag)
-            .Where(t => t.FinancialTransaction.Id == batch.Id)
+            var transactionTags = await Db.FinancialTransactionTags
+            .Where(t => t.FinancialTransaction.Batch.Id == batch.Id)
+            .Select(t => new
+            {
+                FinancialTransactionId = t.FinancialTransaction.Id,
+                TagValue = t.TagValue.Value,
+                TagId = t.TagValue.Tag.Id
+            })
             .ToListAsync();
 
             foreach (var transaction in transactions)
             {
-                var paymentBackup = new TransactionBatchItemBackup
-                {
-                    Id = transaction.Id,
-                    Value = transaction.Value,
-                    EmissionDate = transaction.EmissionDate,
-                    TransactionDate = transaction.TransactionDate,
-                    DueDate = transaction.DueDate,
-                    Paid = transaction.Status == FinancialTransactionStatus.Paid,
-                    Observation = transaction.Observation,
-                    Tags = new List<TagBackup>()
-                };
+                List<string> line = new();
 
-                foreach (var financialTag in tags)
-                {
-                    var tagBackup = new TagBackup
-                    {
-                        Id = financialTag.Tag.Id,
-                        Name = financialTag.Tag.Name,
-                        Value = financialTag.TagValue.Value
-                    };
+                line.Add($"\"{batch.Profile.Name}\"");
+                line.Add(transaction.IsEntry ? "Entrada" : "Saída");
+                line.Add(transaction.EmissionDate.HasValue ? transaction.EmissionDate.Value.ToString("yyyy-MM-dd") : string.Empty);
+                line.Add(transaction.Status == FinancialTransactionStatus.Paid ? "Pago" : "Pendente");
+                line.Add($"\"{batch.Name}\"");
+                line.Add($"\"{transaction.Observation ?? string.Empty}\"");
+                line.Add($"\"{transaction.Value.ToString("F2")}\"");
+                line.Add(transaction.DueDate.HasValue ? transaction.DueDate.Value.ToString("yyyy-MM-dd") : string.Empty);
+                line.Add(transaction.TransactionDate.HasValue ? transaction.TransactionDate.Value.ToString("yyyy-MM-dd") :
+                string.Empty);
 
-                    paymentBackup.Tags.Add(tagBackup);
+                foreach (var tag in tags)
+                {
+                    var financialTag = transactionTags.FirstOrDefault(t => t.TagId == tag.Id && t.FinancialTransactionId == transaction.Id);
+                    line.Add(financialTag != null ? $"\"{financialTag.TagValue}\"" : string.Empty);
                 }
 
-                transactionBackup.Payments.Add(paymentBackup);
+                csv.AppendLine(string.Join(",", line));
             }
-
-            backup.Add(transactionBackup);
         }
 
-        var fileName = $"backup-{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.json";
-        var json = JsonSerializer.Serialize(backup);
-        var fileBytes = Encoding.UTF8.GetBytes(json);
-        var fileBase64 = Convert.ToBase64String(fileBytes);
-
-        var fileUrl = $"data:application/json;base64,{fileBase64}";
+        var fileName = $"backup-{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.csv";
+        var fileUrl = $"data:text/csv;charset=utf-8,{Uri.EscapeDataString(csv.ToString())}";
 
         await JS.InvokeVoidAsync("downloadFileFromUrl", fileName, fileUrl);
-
     }
 
-    record TransactionBatchBackup
+    private static List<string> SplitCsvLine(string line)
     {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public ICollection<TransactionBatchItemBackup> Payments { get; set; } = [];
+        var columns = new List<string>();
+        var regex = new Regex("(?:^|,)(\"(?:[^\"]|\"\")*\"|[^,]*)", RegexOptions.Compiled);
+
+        foreach (Match match in regex.Matches(line))
+        {
+            string value = match.Value;
+            if (value.StartsWith(",")) value = value.Substring(1);
+            value = value.Trim();
+            if (value.StartsWith("\"") && value.EndsWith("\""))
+            {
+                value = value.Substring(1, value.Length - 2).Replace("\"\"", "\"");
+            }
+            columns.Add(value);
+        }
+        return columns;
     }
 
-    record TransactionBatchItemBackup
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
-        public int Id { get; set; }
-        public decimal Value { get; set; }
-        public DateOnly? EmissionDate { get; set; }
-        public DateOnly? TransactionDate { get; set; }
-        public DateOnly? DueDate { get; set; }
-        public bool Paid { get; set; }
-        public string? Observation { get; set; }
-        public ICollection<TagBackup> Tags { get; set; } = [];
-    }
+        var file = e.File;
+        if (file == null || !file.Name.EndsWith(".csv"))
+        {
+            // Handle invalid file selection
+            return;
+        }
 
-    record TagBackup
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Value { get; set; } = string.Empty;
+        using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // 10 MB limit
+        using var reader = new StreamReader(stream);
+        var csvContent = await reader.ReadToEndAsync();
+
+        var lines = csvContent.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        if (lines.Length < 2)
+        {
+            // Handle empty or invalid CSV
+            return;
+        }
+
+        var profiles = await Db.Profiles.ToListAsync();
+        var batches = await Db.FinancialTransactionBatches.ToListAsync();
+        var tags = await Db.Tags.Include(p => p.Profile).Include(p => p.Values).ToListAsync();
+
+        var header = lines[0].Split(',');
+
+        foreach (var line in lines.Skip(1))
+        {
+            var columns = SplitCsvLine(line);
+            if (columns.Count < 9)
+            {
+                // Handle invalid line
+                continue;
+            }
+
+            var profileName = columns[0].Trim('"');
+            var profile = profiles.FirstOrDefault(p => p.Name == profileName);
+            if (profile == null)
+            {
+                profile = new Profile { Name = profileName };
+                Db.Profiles.Add(profile);
+                await Db.SaveChangesAsync();
+                profiles.Add(profile);
+            }
+
+            for (int i = 9; i < columns.Count; i++)
+            {
+                var tagValueColumn = columns[i].Trim('"');
+                if (string.IsNullOrEmpty(tagValueColumn)) continue;
+
+                var tagName = header[i].Trim('"');
+                var tag = tags.FirstOrDefault(t => t.Name == tagName && t.Profile.Id == profile.Id);
+                if (tag == null)
+                {
+                    tag = new Tag { Name = tagName, Profile = profile, Values = new List<TagValue>() };
+                    tags.Add(tag);
+                }
+
+                var tagValue = tag.Values.FirstOrDefault(v => v.Value == tagValueColumn);
+                if (tagValue == null)
+                {
+                    tagValue = new TagValue
+                    {
+                        Value = tagValueColumn,
+                        Tag = tag
+                    };
+
+                    tag.Values.Add(tagValue);
+                }
+
+                if (tag.Id > 0)
+                {
+                    Db.Tags.Update(tag);
+                }
+                else
+                {
+                    await Db.Tags.AddAsync(tag);
+                }
+
+                await Db.SaveChangesAsync();
+            }
+        }
+
+        foreach (var line in lines.Skip(1))
+        {
+            var columns = SplitCsvLine(line);
+            if (columns.Count < 9)
+            {
+                // Handle invalid line
+                continue;
+            }
+
+            var profileName = columns[0].Trim('"');
+            var profile = profiles.First(p => p.Name == profileName);
+
+            var batchName = columns[4].Trim('"');
+            var batch = batches.FirstOrDefault(b => b.Name == batchName && b.Profile.Id == profile.Id);
+            if (batch == null)
+            {
+                batch = new FinancialTransactionBatch
+                {
+                    Name = batchName,
+                    Profile = profile
+                };
+                batches.Add(batch);
+            }
+
+            var emissionDate = DateTime.TryParse(columns[2], out var parsedEmissionDate) ? parsedEmissionDate : (DateTime?)null;
+            var dueDate = DateTime.TryParse(columns[7], out var parsedDueDate) ? parsedDueDate : (DateTime?)null;
+            var transactionDate = DateTime.TryParse(columns[8], out var parsedTransactionDate) ? parsedTransactionDate :
+            (DateTime?)null;
+
+            var transaction = new FinancialTransaction
+            {
+                Batch = batch,
+                IsEntry = columns[1].Trim().ToLower() == "entrada",
+                EmissionDate = emissionDate != null ? DateOnly.FromDateTime(emissionDate.Value) : null,
+                Status = columns[3].Trim() == "Pago" ? FinancialTransactionStatus.Paid : FinancialTransactionStatus.Pending,
+                Observation = columns[5].Trim('"'),
+                Value = decimal.TryParse(columns[6].Trim('"'), out var value) ? value : 0,
+                DueDate = dueDate != null ? DateOnly.FromDateTime(dueDate.Value) : null,
+                TransactionDate = transactionDate != null ? DateOnly.FromDateTime(transactionDate.Value) : null,
+                Tags = new List<FinancialTransactionTag>()
+            };
+
+            for (int i = 9; i < columns.Count; i++)
+            {
+                var tagValueColumn = columns[i].Trim('"');
+                if (string.IsNullOrEmpty(tagValueColumn)) continue;
+
+                var tagName = header[i].Trim('"');
+                var tag = tags.First(t => t.Name == tagName && t.Profile.Id == profile.Id);
+                var tagValue = tag.Values.First(v => v.Value == tagValueColumn);
+
+                transaction.Tags.Add(new FinancialTransactionTag { FinancialTransaction = transaction, TagValue = tagValue, Tag = tag });
+            }
+
+            batch.Transactions.Add(transaction);
+
+            if (batch.Id > 0)
+            {
+                Db.FinancialTransactionBatches.Update(batch);
+            }
+            else
+            {
+                await Db.FinancialTransactionBatches.AddAsync(batch);
+            }
+
+            await Db.SaveChangesAsync();
+        }
+
+        NavigationManager.NavigateTo("/");
     }
 }
-
 
 <PageTitle>Backup</PageTitle>
 
@@ -114,3 +268,10 @@
 <p>
     <button class="btn btn-primary" @onclick="DownloadBackup">Download Backup</button>
 </p>
+
+<div class="row">
+    <div class="col-md-12">
+        <label class="form-label">Import data</label>
+        <InputFile OnChange="HandleFileSelected" class="form-control" accept=".csv" />
+    </div>
+</div>
