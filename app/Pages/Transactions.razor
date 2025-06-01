@@ -88,13 +88,13 @@
             {
                 query = query.Where(p => p.DueDate >= DateOnly.FromDateTime(filter.StartDate.Value));
             }
-            else if (filter.SelectedDateType == "emission")
+            else if (filter.SelectedDateType == "issue")
             {
-                query = query.Where(p => p.EmissionDate >= DateOnly.FromDateTime(filter.StartDate.Value));
+                query = query.Where(p => p.IssueDate >= DateOnly.FromDateTime(filter.StartDate.Value));
             }
             else
             {
-                query = query.Where(p => p.TransactionDate >= DateOnly.FromDateTime(filter.StartDate.Value));
+                query = query.Where(p => p.PaymentDate >= DateOnly.FromDateTime(filter.StartDate.Value));
             }
         }
 
@@ -104,13 +104,13 @@
             {
                 query = query.Where(p => p.DueDate <= DateOnly.FromDateTime(filter.EndDate.Value));
             }
-            else if (filter.SelectedDateType == "emission")
+            else if (filter.SelectedDateType == "issue")
             {
-                query = query.Where(p => p.EmissionDate <= DateOnly.FromDateTime(filter.EndDate.Value));
+                query = query.Where(p => p.IssueDate <= DateOnly.FromDateTime(filter.EndDate.Value));
             }
             else
             {
-                query = query.Where(p => p.TransactionDate <= DateOnly.FromDateTime(filter.EndDate.Value));
+                query = query.Where(p => p.PaymentDate <= DateOnly.FromDateTime(filter.EndDate.Value));
             }
         }
 
@@ -123,13 +123,13 @@
         {
             query = query.OrderByDescending(p => p.DueDate);
         }
-        else if (filter.SelectedDateType == "emission")
+        else if (filter.SelectedDateType == "issue")
         {
-            query = query.OrderByDescending(p => p.EmissionDate);
+            query = query.OrderByDescending(p => p.IssueDate);
         }
         else
         {
-            query = query.OrderByDescending(p => p.TransactionDate);
+            query = query.OrderByDescending(p => p.PaymentDate);
         }
 
         return await query.ToListAsync();
@@ -144,7 +144,8 @@
     <div class="col-3">
         <label>Filtrar por</label>
         <select class="form-control" @bind="filter.SelectedDateType">
-            <option value="registered">Data de registro</option>
+            <option value="due">Data de vencimento</option>
+            <option value="issue">Data de registro/emissão</option>
             <option value="payment">Data de pagamento</option>
         </select>
     </div>
@@ -187,11 +188,11 @@ else
     <table class="table">
         <thead>
             <tr>
-                <th class="col-2 text-center">Emissão em</th>
+                <th class="col-2 text-center">Emitido em</th>
                 <th class="col-2 text-left">Descrição</th>
                 <th class="col-2 text-center">Vence em</th>
                 <th class="col-1 text-center">Status</th>
-                <th class="col-2 text-center">Movimentado em</th>
+                <th class="col-2 text-center">Pagamento em</th>
                 <th class="col-1" style="text-align: right;">Valor</th>
                 <th class="col-2 text-center">Ações</th>
             </tr>
@@ -201,7 +202,7 @@ else
             {
                 <tr>
                     <td class="text-center">
-                        @transaction.EmissionDate?.ToString("dd/MM")
+                        @transaction.IssueDate?.ToString("dd/MM")
                     </td>
                     <td class="text-left">
                         <span>@(transaction.IsEntry ? "Entrada" : "Saída") - @transaction.Batch.Name</span>
@@ -228,7 +229,7 @@ else
                         </button>
                     </td>
                     <td class="text-center">
-                        @transaction.TransactionDate?.ToString("dd/MM")
+                        @transaction.PaymentDate?.ToString("dd/MM")
                     </td>
                     <td style="text-align: right;">
                         @transaction.Value.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))

@@ -53,9 +53,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Observation).IsRequired(false);
-            entity.Property(e => e.EmissionDate).IsRequired(false);
+            entity.Property(e => e.IssueDate).IsRequired(false);
             entity.Property(e => e.DueDate).IsRequired(false);
-            entity.Property(e => e.TransactionDate).IsRequired(false);
+            entity.Property(e => e.PaymentDate).IsRequired(false);
             entity.Property(e => e.Value).IsRequired();
             entity.Property(e => e.Status).IsRequired();
             entity.HasOne(e => e.Batch).WithMany(g => g.Transactions).HasForeignKey("BatchId");

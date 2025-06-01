@@ -51,9 +51,9 @@
                     TransactionModel transactionModel = new()
                     {
                         Id = transaction.Id,
-                        EmissionDate = transaction.EmissionDate,
+                        IssueDate = transaction.IssueDate,
                         DueDate = transaction.DueDate,
-                        TransactionDate = transaction.TransactionDate,
+                        PaymentDate = transaction.PaymentDate,
                         Observation = transaction.Observation,
                         Value = transaction.Value,
                         IsEntry = transaction.IsEntry,
@@ -100,9 +100,9 @@
         {
             var copyOfLastTransaction = new TransactionModel
             {
-                EmissionDate = lastTransaction.EmissionDate,
+                IssueDate = lastTransaction.IssueDate,
                 DueDate = lastTransaction.DueDate,
-                TransactionDate = lastTransaction.TransactionDate,
+                PaymentDate = lastTransaction.PaymentDate,
                 Observation = lastTransaction.Observation,
                 Value = lastTransaction.Value,
                 IsEntry = lastTransaction.IsEntry,
@@ -116,9 +116,9 @@
         {
             var initialTransaction = new TransactionModel
             {
-                EmissionDate = DateOnly.FromDateTime(DateTime.Now),
+                IssueDate = DateOnly.FromDateTime(DateTime.Now),
                 DueDate = DateOnly.FromDateTime(DateTime.Now),
-                TransactionDate = DateOnly.FromDateTime(DateTime.Now),
+                PaymentDate = DateOnly.FromDateTime(DateTime.Now),
                 Observation = string.Empty,
                 Value = 0,
                 IsEntry = true,
@@ -164,9 +164,9 @@
                 batch.Transactions.Add(transaction);
             }
 
-            transaction.EmissionDate = transactionModel.EmissionDate;
+            transaction.IssueDate = transactionModel.IssueDate;
             transaction.DueDate = transactionModel.DueDate;
-            transaction.TransactionDate = transactionModel.TransactionDate;
+            transaction.PaymentDate = transactionModel.PaymentDate;
             transaction.Observation = transactionModel.Observation;
             transaction.Value = transactionModel.Value;
             transaction.IsEntry = transactionModel.IsEntry;
@@ -275,12 +275,12 @@
             <tr>
                 <th>#</th>
                 <th>Tipo</th>
-                <th>Emissão em</th>
+                <th>Emitido em</th>
                 <th>Status</th>
                 <th>Observação</th>
                 <th>Valor</th>
-                <th>Vencimento em</th>
-                <th>Movimentação em</th>
+                <th>Vence em</th>
+                <th>Pagamento em</th>
                 @foreach (var tag in Tags)
                 {
                     <th>@tag.Name</th>
@@ -303,8 +303,8 @@
                         <ValidationMessage For="@(() => item.IsEntry)" class="text-danger" />
                     </td>
                     <td>
-                        <InputDate class="form-control" @bind-Value="item.EmissionDate" />
-                        <ValidationMessage For="@(() => item.EmissionDate)" class="text-danger" />
+                        <InputDate class="form-control" @bind-Value="item.IssueDate" />
+                        <ValidationMessage For="@(() => item.IssueDate)" class="text-danger" />
                     </td>
                     <td>
                         <InputSelect class="form-control" @bind-Value="item.Status">
@@ -326,8 +326,8 @@
                         <ValidationMessage For="@(() => item.DueDate)" class="text-danger" />
                     </td>
                     <td>
-                        <InputDate class="form-control" @bind-Value="item.TransactionDate" />
-                        <ValidationMessage For="@(() => item.TransactionDate)" class="text-danger" />
+                        <InputDate class="form-control" @bind-Value="item.PaymentDate" />
+                        <ValidationMessage For="@(() => item.PaymentDate)" class="text-danger" />
                     </td>
                     @foreach (var tag in Tags)
                     {

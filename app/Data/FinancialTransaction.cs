@@ -18,9 +18,9 @@ public class FinancialTransaction
 {
     public int Id { get; set; }
     public FinancialTransactionBatch Batch { get; set; }
-    public DateOnly? EmissionDate { get; set; }
+    public DateOnly? IssueDate { get; set; }
     public DateOnly? DueDate { get; set; }
-    public DateOnly? TransactionDate { get; set; }
+    public DateOnly? PaymentDate { get; set; }
     public string? Observation { get; set; }
     public decimal Value { get; set; }
     public bool IsEntry { get; set; }

@@ -30,8 +30,8 @@
         header.Add("Nome");
         header.Add("Observação");
         header.Add("Valor");
-        header.Add("Vencimento");
-        header.Add("Data de Movimentação");
+        header.Add("Data de Vencimento");
+        header.Add("Data de Pagamento");
 
         foreach (var tag in tags)
         {
@@ -63,13 +63,13 @@
 
                 line.Add($"\"{batch.Profile.Name}\"");
                 line.Add(transaction.IsEntry ? "Entrada" : "Saída");
-                line.Add(transaction.EmissionDate.HasValue ? transaction.EmissionDate.Value.ToString("yyyy-MM-dd") : string.Empty);
+                line.Add(transaction.IssueDate.HasValue ? transaction.IssueDate.Value.ToString("yyyy-MM-dd") : string.Empty);
                 line.Add(transaction.Status == FinancialTransactionStatus.Paid ? "Pago" : "Pendente");
                 line.Add($"\"{batch.Name}\"");
                 line.Add($"\"{transaction.Observation ?? string.Empty}\"");
                 line.Add($"\"{transaction.Value.ToString("F2")}\"");
                 line.Add(transaction.DueDate.HasValue ? transaction.DueDate.Value.ToString("yyyy-MM-dd") : string.Empty);
-                line.Add(transaction.TransactionDate.HasValue ? transaction.TransactionDate.Value.ToString("yyyy-MM-dd") :
+                line.Add(transaction.PaymentDate.HasValue ? transaction.PaymentDate.Value.ToString("yyyy-MM-dd") :
                 string.Empty);
 
                 foreach (var tag in tags)
@@ -214,21 +214,21 @@
                 batches.Add(batch);
             }
 
-            var emissionDate = DateTime.TryParse(columns[2], out var parsedEmissionDate) ? parsedEmissionDate : (DateTime?)null;
+            var issueDate = DateTime.TryParse(columns[2], out var parsedIssueDate) ? parsedIssueDate : (DateTime?)null;
             var dueDate = DateTime.TryParse(columns[7], out var parsedDueDate) ? parsedDueDate : (DateTime?)null;
-            var transactionDate = DateTime.TryParse(columns[8], out var parsedTransactionDate) ? parsedTransactionDate :
+            var paymentDate = DateTime.TryParse(columns[8], out var parsedPaymentDate) ? parsedPaymentDate :
             (DateTime?)null;
 
             var transaction = new FinancialTransaction
             {
                 Batch = batch,
                 IsEntry = columns[1].Trim().ToLower() == "entrada",
-                EmissionDate = emissionDate != null ? DateOnly.FromDateTime(emissionDate.Value) : null,
+                IssueDate = issueDate != null ? DateOnly.FromDateTime(issueDate.Value) : null,
                 Status = columns[3].Trim() == "Pago" ? FinancialTransactionStatus.Paid : FinancialTransactionStatus.Pending,
                 Observation = columns[5].Trim('"'),
                 Value = decimal.TryParse(columns[6].Trim('"'), out var value) ? value : 0,
                 DueDate = dueDate != null ? DateOnly.FromDateTime(dueDate.Value) : null,
-                TransactionDate = transactionDate != null ? DateOnly.FromDateTime(transactionDate.Value) : null,
+                PaymentDate = paymentDate != null ? DateOnly.FromDateTime(paymentDate.Value) : null,
                 Tags = new List<FinancialTransactionTag>()
             };
 
